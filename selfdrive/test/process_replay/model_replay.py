@@ -19,14 +19,15 @@ from tools.lib.framereader import FrameReader
 from tools.lib.logreader import LogReader
 from tools.lib.helpers import save_log
 
-TEST_ROUTE = "2f4452b03ccb98f0|2022-12-03--13-45-30"
-SEGMENT = 6
-MAX_FRAMES = 100 if PC else 600
-NAV_FRAMES = 50
+TEST_ROUTE = "4cf7a6ad03080c90|2021-09-29--13-46-36"
+SEGMENT = 0
+MAX_FRAMES = 5
+NAV_FRAMES = 0
 
-NO_NAV = "NO_NAV" in os.environ
+NO_NAV = True
 SEND_EXTRA_INPUTS = bool(int(os.getenv("SEND_EXTRA_INPUTS", "0")))
 
+print(f'{NO_NAV=} , {SEND_EXTRA_INPUTS=}')
 
 def get_log_fn(ref_commit, test_route):
   return f"{test_route}_model_tici_{ref_commit}.bz2"
@@ -145,6 +146,7 @@ def model_replay(lr, frs):
 if __name__ == "__main__":
   update = "--update" in sys.argv
   replay_dir = os.path.dirname(os.path.abspath(__file__))
+  print(replay_dir)
   ref_commit_fn = os.path.join(replay_dir, "model_replay_ref_commit")
 
   # load logs

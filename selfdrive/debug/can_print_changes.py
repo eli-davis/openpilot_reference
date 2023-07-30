@@ -15,7 +15,9 @@ def update(msgs, bus, dat, low_to_high, high_to_low, quiet=False):
   for x in msgs:
     if x.which() != 'can':
       continue
-
+    print("printing x.can")
+    print(x.can)
+    return
     for y in x.can:
       if y.src == bus:
         dat[y.address] = y.dat
@@ -39,7 +41,7 @@ def update(msgs, bus, dat, low_to_high, high_to_low, quiet=False):
 
 def can_printer(bus=0, init_msgs=None, new_msgs=None, table=False):
   logcan = messaging.sub_sock('can', timeout=10)
-
+  print(dir(logcan))
   dat = defaultdict(int)
   low_to_high = defaultdict(int)
   high_to_low = defaultdict(int)
@@ -59,6 +61,7 @@ def can_printer(bus=0, init_msgs=None, new_msgs=None, table=False):
       while 1:
         can_recv = messaging.drain_sock(logcan)
         update(can_recv, bus, dat, low_to_high, high_to_low)
+        # break
         time.sleep(0.02)
     except KeyboardInterrupt:
       pass

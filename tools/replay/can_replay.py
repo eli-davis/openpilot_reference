@@ -100,7 +100,9 @@ if __name__ == "__main__":
 
   print("Loading log...")
   if args.route_or_segment_name is None:
+
     ROUTE = "77611a1fac303767/2020-03-24--09-50-38"
+    print(ROUTE)
     REPLAY_SEGS = list(range(10, 16))  # route has 82 segments available
     CAN_MSGS = []
     logs = [f"https://commadataci.blob.core.windows.net/openpilotci/{ROUTE}/{i}/rlog.bz2" for i in REPLAY_SEGS]
@@ -108,6 +110,7 @@ if __name__ == "__main__":
       for lr in tqdm(pool.map(load_segment, logs)):
         CAN_MSGS += [can_capnp_to_can_list(m.can) for m in lr if m.which() == 'can']
   else:
+    print(args.route_or_segment_name)
     lr = logreader_from_route_or_segment(args.route_or_segment_name)
     CAN_MSGS = [can_capnp_to_can_list(m.can) for m in lr if m.which() == 'can']
 

@@ -56,6 +56,31 @@ mat3 update_calibration(Eigen::Vector3d device_from_calib_euler, bool wide_camer
   return transform;
 }
 
+void save_image_from_visionbuf(VisionBuf *buf, const std::string &filename) {
+    std::ofstream outfile(filename, std::ios::binary);
+
+
+    std::cout<<"buf->len: "<<buf->len<<std::endl;
+    std::cout<<"buf->width: "<<buf->width<<std::endl;
+    std::cout<<"buf->height: "<<buf->height<<std::endl;
+    std::cout<<"buf->stride: "<<buf->stride<<std::endl;
+    std::cout<<"buf->uv_offset: "<<buf->uv_offset<<std::endl;
+    std::cout << "size_t: " << sizeof(size_t) << std::endl;
+    // Write width, height, and stride as integers.
+    outfile.write(reinterpret_cast<const char*>(&buf->width), sizeof(buf->width));
+    outfile.write(reinterpret_cast<const char*>(&buf->height), sizeof(buf->height));
+    outfile.write(reinterpret_cast<const char*>(&buf->stride), sizeof(buf->stride));
+
+    // Write uv_offset as size_t.
+    outfile.write(reinterpret_cast<const char*>(&buf->uv_offset), sizeof(buf->uv_offset));
+
+    // Write Y and UV planes.
+    outfile.write(reinterpret_cast<const char*>(buf->y), buf->height * buf->stride);
+    outfile.write(reinterpret_cast<const char*>(buf->uv), buf->height/2 * buf->stride);
+
+    outfile.close();
+}
+
 
 void run_model(ModelState &model, VisionIpcClient &vipc_client_main, VisionIpcClient &vipc_client_extra, bool main_wide_camera, bool use_extra_client) {
   // messaging
@@ -117,7 +142,8 @@ void run_model(ModelState &model, VisionIpcClient &vipc_client_main, VisionIpcCl
       buf_extra = buf_main;
       meta_extra = meta_main;
     }
-
+    save_image_from_visionbuf(buf_main, "main_image.bin");
+    save_image_from_visionbuf(buf_extra, "extra_image.bin");
     // TODO: path planner timeout?
     sm.update(0);
     int desire = ((int)sm["lateralPlan"].getLateralPlan().getDesire());

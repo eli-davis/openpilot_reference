@@ -100,6 +100,7 @@ def ui_thread(addr):
   draw_plots = init_plots(plot_arr, name_to_arr_idx, plot_xlims, plot_ylims, plot_names, plot_colors, plot_styles)
 
   vipc_client = VisionIpcClient("camerad", VisionStreamType.VISION_STREAM_ROAD, True)
+  frame_ctr = 0
   while 1:
     list(pygame.event.get())
 
@@ -110,16 +111,24 @@ def ui_thread(addr):
     # ***** frame *****
     if not vipc_client.is_connected():
       vipc_client.connect(True)
+      video_writer = cv2.VideoWriter('output.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 20, (vipc_client.width, vipc_client.height))
 
     yuv_img_raw = vipc_client.recv()
 
+<<<<<<< Updated upstream
     if yuv_img_raw is None or not yuv_img_raw.data.any():
+=======
+    if yuv_img_raw is None or not yuv_img_raw.any():  
+>>>>>>> Stashed changes
       continue
 
     imgff = np.frombuffer(yuv_img_raw.data, dtype=np.uint8).reshape((vipc_client.height * 3 // 2, vipc_client.width))
     num_px = vipc_client.width * vipc_client.height
     bgr = cv2.cvtColor(imgff, cv2.COLOR_YUV2RGB_NV12)
-
+    video_writer.write(bgr)
+    frame_ctr += 1
+    if(frame_ctr > 1200):
+        video_writer.release()
     zoom_matrix = _BB_TO_FULL_FRAME[num_px]
     cv2.warpAffine(bgr, zoom_matrix[:2], (img.shape[1], img.shape[0]), dst=img, flags=cv2.WARP_INVERSE_MAP)
 
@@ -165,6 +174,9 @@ def ui_thread(addr):
 
     if sm.updated['liveCalibration'] and num_px:
       rpyCalib = np.asarray(sm['liveCalibration'].rpyCalib)
+      print(f'{rpyCalib=}')
+      print(f'{num_px=}')
+      print(f'{intrinsic_matrix=}')
       calibration = Calibration(num_px, rpyCalib, intrinsic_matrix)
 
     # *** blits ***
