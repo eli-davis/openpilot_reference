@@ -20,8 +20,8 @@ from tools.lib.logreader import LogReader
 from tools.lib.helpers import save_log
 
 TEST_ROUTE = "4cf7a6ad03080c90|2021-09-29--13-46-36"
-SEGMENT = 0
-MAX_FRAMES = 5
+SEGMENT = 6
+MAX_FRAMES = 100
 NAV_FRAMES = 0
 
 NO_NAV = True

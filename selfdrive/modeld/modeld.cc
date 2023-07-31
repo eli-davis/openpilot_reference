@@ -1,9 +1,13 @@
+// B"H
+
 #include <cstdio>
 #include <cstdlib>
 #include <mutex>
 #include <cmath>
 
 #include <eigen3/Eigen/Dense>
+
+#include <filesystem>
 
 #include "cereal/messaging/messaging.h"
 #include "common/transformations/orientation.hpp"
@@ -56,8 +60,12 @@ mat3 update_calibration(Eigen::Vector3d device_from_calib_euler, bool wide_camer
   return transform;
 }
 
-void save_image_from_visionbuf(VisionBuf *buf, const std::string &filename) {
-    std::ofstream outfile(filename, std::ios::binary);
+void save_image_from_visionbuf(VisionBuf *buf, int counter, const std::string &filename) {
+
+    // Create a new filename with the counter as index
+    std::string indexed_filename = "data/" + std::to_string(counter) + "_" + filename + ".bin";
+
+    std::ofstream outfile(indexed_filename, std::ios::binary);
 
 
     std::cout<<"buf->len: "<<buf->len<<std::endl;
@@ -79,6 +87,23 @@ void save_image_from_visionbuf(VisionBuf *buf, const std::string &filename) {
     outfile.write(reinterpret_cast<const char*>(buf->uv), buf->height/2 * buf->stride);
 
     outfile.close();
+}
+
+void save_images_from_visionbuf(VisionBuf * buf_main, VisionBuf * buf_extra) {
+
+    // Define the static integer
+    static int counter = 0;
+
+    if (counter==0 && !std::filesystem::exists("data")) {
+        std::filesystem::create_directory("data");
+    }
+
+    // Increment the counter
+    counter++;
+
+    save_image_from_visionbuf(buf_main,  counter, "main_cam");
+    save_image_from_visionbuf(buf_extra, counter, "wide_cam");
+
 }
 
 
@@ -142,8 +167,11 @@ void run_model(ModelState &model, VisionIpcClient &vipc_client_main, VisionIpcCl
       buf_extra = buf_main;
       meta_extra = meta_main;
     }
-    save_image_from_visionbuf(buf_main, "main_image.bin");
-    save_image_from_visionbuf(buf_extra, "extra_image.bin");
+
+    save_images_from_visionbuf(buf_main, buf_extra);
+
+
+
     // TODO: path planner timeout?
     sm.update(0);
     int desire = ((int)sm["lateralPlan"].getLateralPlan().getDesire());
