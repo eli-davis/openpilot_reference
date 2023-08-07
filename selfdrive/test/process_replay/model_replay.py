@@ -19,9 +19,32 @@ from tools.lib.framereader import FrameReader
 from tools.lib.logreader import LogReader
 from tools.lib.helpers import save_log
 
+# ____
+# ____
+
+sys.path.insert(0, "/home/deepview/SSD/pathfinder/src")
+#sys.path.insert(0, "/home/deepview/SSD/pathfinder/src/utils/transformations")
+from control import mode, ControlStateMachine
+
+
+from termcolor import cprint as print_in_color
+import numpy as np
+import cv2
+
+def img_to_rgb(yuv_img_raw):
+  imgff = np.frombuffer(yuv_img_raw.data, dtype=np.uint8).reshape((1208 * 3 // 2, 1928))
+  num_px = 1208 * 1928
+  rgb = cv2.cvtColor(imgff, cv2.COLOR_YUV2RGB_NV12)
+  return rgb
+  #bgr = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
+  #return bgr
+
+# ____
+# ____
+
 TEST_ROUTE = "4cf7a6ad03080c90|2021-09-29--13-46-36"
-SEGMENT = 6
-MAX_FRAMES = 100
+SEGMENT = 0
+MAX_FRAMES = 10
 NAV_FRAMES = 0
 
 NO_NAV = True
@@ -117,9 +140,14 @@ def model_replay(lr, frs):
   # modeld is using frame pairs
   modeld_logs = trim_logs_to_max_frames(lr, MAX_FRAMES, {"roadCameraState", "wideRoadCameraState"}, {"roadEncodeIdx", "wideRoadEncodeIdx"})
   dmodeld_logs = trim_logs_to_max_frames(lr, MAX_FRAMES, {"driverCameraState"}, {"driverEncodeIdx"})
+
   if not SEND_EXTRA_INPUTS:
     modeld_logs = [msg for msg in modeld_logs if msg.which() not in ["liveCalibration", "lateralPlan"]]
     dmodeld_logs = [msg for msg in dmodeld_logs if msg.which() not in ["liveCalibration", "lateralPlan"]]
+
+
+
+
   # initial calibration
   cal_msg = next(msg for msg in lr if msg.which() == "liveCalibration").as_builder()
   cal_msg.logMonoTime = lr[0].logMonoTime
@@ -135,7 +163,7 @@ def model_replay(lr, frs):
     modeld_msgs = replay_process(modeld, modeld_logs, frs)
     dmonitoringmodeld_msgs = replay_process(dmonitoringmodeld, dmodeld_logs, frs)
     log_msgs.extend([m for m in modeld_msgs if m.which() == "modelV2"])
-    log_msgs.extend([m for m in dmonitoringmodeld_msgs if m.which() == "driverStateV2"])
+    #log_msgs.extend([m for m in dmonitoringmodeld_msgs if m.which() == "driverStateV2"])
   finally:
     if spinner:
       spinner.close()
@@ -182,8 +210,96 @@ if __name__ == "__main__":
   else:
     os.environ['MAPS_HOST'] = BASE_URL.rstrip('/')
 
+
+  print("__")
+  print("__")
+
+  #print(frs)
+
+  #main_img = frs['roadCameraState']
+
+
+  #main_img = frs['roadCameraState'].get(0, pix_fmt="nv12")
+
+  # ____
+
+  frame_id = 0
+  prev_main_img = frs['roadCameraState'].get(frame_id, pix_fmt="nv12")[0]
+  prev_wide_img = frs['wideRoadCameraState'].get(frame_id, pix_fmt="nv12")[0]
+
+  prev_main_img_rgb = img_to_rgb(prev_main_img)
+  prev_wide_img_rgb = img_to_rgb(prev_wide_img)
+
+  # ____
+
+  frame_id = 1
+  main_img = frs['roadCameraState'].get(frame_id, pix_fmt="nv12")[0]
+  wide_img = frs['wideRoadCameraState'].get(frame_id, pix_fmt="nv12")[0]
+
+  main_img_rgb = img_to_rgb(main_img)
+  wide_img_rgb = img_to_rgb(wide_img)
+
+  # ____
+
+
+  control_loop = ControlStateMachine(active_mode=mode.step_through, model_name="supercombo_laptop")
+
+  prev_main_img_comma_format = self.convert_image(prev_main_img_rgb, control_loop.model_transform_main)
+  prev_wide_img_comma_format = self.convert_image(prev_wide_img_rgb, control_loop.model_transform_extra)
+
+  main_img_comma_format = self.convert_image(main_img_rgb, control_loop.model_transform_main)
+  wide_img_comma_format = self.convert_image(wide_img_rgb, control_loop.model_transform_extra)
+
+  # ____
+  timestamp = str(time.time())
+  control_loop.images.append((timestamp, prev_main_img_rgb, prev_main_img_comma_format, prev_wide_img_comma_format))
+  control_loop.images.append((timestamp, main_img_rgb, main_img_comma_format, wide_img_comma_format))
+
+  control_loop.run_inference()
+
+  os._exit(0)
+
   # run replays
   log_msgs = model_replay(lr, frs)
+
+  print("___________________")
+  print("___________________")
+  print("___________________")
+  print("___________________")
+  print("___________________")
+  print("___________________")
+  print("___________________")
+  print("___________________")
+  print("___________________")
+  print("___________________")
+  print("___________________")
+  print("___________________")
+  print("___________________")
+  print("___________________")
+  print("___________________")
+  print("___________________")
+  print("___________________")
+  print("___________________")
+  print("___________________")
+  print("___________________")
+  print("___________________")
+
+  print_in_color(f"len(log_msgs)={len(log_msgs)}", "yellow")
+
+  for log_msg_i in range(0, len(log_msgs)):
+      print_in_color(f"log_msgs[{log_msg_i}].modelV2.frameId={log_msgs[log_msg_i].modelV2.frameId}", "yellow")
+
+  print_in_color(f"log_msgs[0]={log_msgs[0]}", "yellow")
+  print_in_color(f"log_msgs[1]={log_msgs[1]}", "yellow")
+  print_in_color(f"log_msgs[2]={log_msgs[2]}", "yellow")
+  print_in_color(f"log_msgs[3]={log_msgs[3]}", "yellow")
+
+  print("___________________")
+  print("___________________")
+  print("___________________")
+  print("___________________")
+  print("___________________")
+
   if not NO_NAV:
     log_msgs += nav_model_replay(lr)
 
