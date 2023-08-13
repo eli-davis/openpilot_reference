@@ -39,13 +39,16 @@ python3 model_replay.py
 # ____________________________________________________________ #
 # ____________________________________________________________ #
 
+4) get all logs from selfdrive/debug/dump.py
+
+# ____________________________________________________________ #
+# ____________________________________________________________ #
+
 1) Main replay - tools/replay/replay --demo
 
 2) can get images from tools/replay/ui.py
 
 3) get can data from selfdrive/debug/can_printer.py
-
-4) get all logs from selfdrive/debug/dump.py
 
 5) ford route -   ("FORD", "54827bf84c38b14f|2023-01-26--21-59-07--4"),        # FORD.BRONCO_SPORT_MK1 
 # remove --4 from the end to run in replay

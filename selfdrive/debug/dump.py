@@ -35,7 +35,13 @@ if __name__ == "__main__":
     sys.exit(0)
   signal.signal(signal.SIGINT, signal_handler)
   values = None
-  with open('candump.txt', 'a') as f:
+
+  iteration_i = 0
+
+  DATA_DIR_PATH = "/home/deepview/SSD/pathfinder/src/get_data/replay"
+
+  #with open('candump.txt', 'a') as f:
+  if True:
     while 1:
       polld = poller.poll(100)
       for sock in polld:
@@ -43,7 +49,29 @@ if __name__ == "__main__":
 
         with log.Event.from_bytes(msg) as log_evt:
           evt = log_evt
-  
+
+        print(f"evt.which()={evt.which()}")
+
+        if evt.which() == 'modelV2':
+            print(f"________________________")
+            print(f"________________________")
+            print(f"________________________")
+            print(f"________________________")
+            print(evt.to_dict())
+
+            # iteration_0001.json
+            # iteration_0002.json
+            # ... etc
+            json_filename = f"iteration_{iteration_i:04}.json"
+            json_filepath = os.path.join(DATA_DIR_PATH, json_filename)
+
+            with open(json_filepath, 'w') as FILE:
+                modelV2_dict = evt.to_dict()
+                json.dump(modelV2_dict, FILE, indent=4)
+
+            iteration_i += 1
+
+        '''
         try:
            if evt.which() == 'can':
                     # Parse the log.Event into a dictionary
@@ -62,12 +90,13 @@ if __name__ == "__main__":
                       }
                       data_list.append(data)
                     # Add the dictionary to data_list
-                      
+
         except UnicodeDecodeError:
           w = evt.which()
           s = f"( logMonoTime {evt.logMonoTime} \n  {w} = "
           s += str(evt.__getattr__(w))
           s += f"\n  valid = {evt.valid} )"
           print(s)
-df = pd.DataFrame(data_list)
-df.to_parquet('candump.parquet')
+        '''
+#df = pd.DataFrame(data_list)
+#df.to_parquet('candump.parquet')

@@ -31,7 +31,7 @@ from termcolor import cprint as print_in_color
 import numpy as np
 import cv2
 
-from pycuda import driver as cuda
+#from pycuda import driver as cuda
 
 def img_to_rgb(yuv_img_raw):
   imgff = np.frombuffer(yuv_img_raw.data, dtype=np.uint8).reshape((1208 * 3 // 2, 1928))
@@ -40,6 +40,7 @@ def img_to_rgb(yuv_img_raw):
   return rgb
   #bgr = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
   #return bgr
+
 
 # ____
 # ____

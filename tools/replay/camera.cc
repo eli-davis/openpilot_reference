@@ -24,7 +24,7 @@ void CameraServer::startVipcServer() {
   vipc_server_.reset(new VisionIpcServer("camerad"));
   for (auto &cam : cameras_) {
     if (cam.width > 0 && cam.height > 0) {
-      rInfo("camera[%d] frame size %dx%d", cam.type, cam.width, cam.height);
+      rError("camera[%d] frame size %dx%d", cam.type, cam.width, cam.height);
       vipc_server_->create_buffers(cam.stream_type, YUV_BUFFER_COUNT, false, cam.width, cam.height);
       if (!cam.thread.joinable()) {
         cam.thread = std::thread(&CameraServer::cameraThread, this, std::ref(cam));
@@ -70,6 +70,32 @@ void CameraServer::cameraThread(Camera &cam) {
 }
 
 void CameraServer::pushFrame(CameraType type, FrameReader *fr, const cereal::EncodeIndex::Reader &eidx) {
+
+  /* _________________________________________________________________ */
+  /* _________________________________________________________________ */
+
+  static int iteration_i = 0;
+
+  iteration_i += 1;
+
+  if (iteration_i == 10) {
+    rError("[iteration_i=%d] EXITING", iteration_i);
+    exit(0);
+  } else {
+    rError("[iteration_i=%d]", iteration_i);
+  }
+
+  /* _________________________________________________________________ */
+  /* _________________________________________________________________ */
+
+  // main_cam only by default
+  // (from README: --dcam to also send wide cam)
+  rError("cameraType=[%d]", type);
+
+  /* _________________________________________________________________ */
+  /* _________________________________________________________________ */
+
+
   auto &cam = cameras_[type];
   if (cam.width != fr->width || cam.height != fr->height) {
     cam.width = fr->width;

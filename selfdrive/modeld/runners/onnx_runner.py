@@ -38,13 +38,34 @@ def run_loop(m, tf8_input=False):
   if "CUDAExecutionProvider" in m.get_providers():
     m.run(None, dict(zip(keys, [np.zeros(shp, dtype=itp) for shp, itp in zip(ishapes, itypes)])))
 
+  DATA_DIR_PATH = "/home/deepview/SSD/pathfinder/src/get_data/replay"
+
+  FILE = open('/home/deepview/SSD/pathfinder/src/get_data/replay/log.txt', 'a') as f:
+  FILE.write("ready to run onnx model")
+
   print("ready to run onnx model", keys, ishapes, file=sys.stderr)
   while 1:
     inputs = []
     for k, shp, itp in zip(keys, ishapes, itypes):
+
+      print(f"ishapes={ishapes}", file=sys.stderr)
+      print(f"itypes={itypes}", file=sys.stderr)
+
+      FILE.write(f"ishapes={ishapes}")
+      FILE.write(f"itypes={itypes}")
+
+
       ts = np.product(shp)
       #print("reshaping %s with offset %d" % (str(shp), offset), file=sys.stderr)
       inputs.append(read(ts, (k=='input_img' and tf8_input)).reshape(shp).astype(itp))
+
+      print(f"inputs.shape={inputs.shape}", file=sys.stderr)
+
+      FILE.write(f"inputs.shape={inputs.shape}")
+
+
+    FILE.close()
+
     ret = m.run(None, dict(zip(keys, inputs)))
     #print(ret, file=sys.stderr)
     for r in ret:

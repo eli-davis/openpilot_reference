@@ -115,11 +115,7 @@ def ui_thread(addr):
 
     yuv_img_raw = vipc_client.recv()
 
-<<<<<<< Updated upstream
     if yuv_img_raw is None or not yuv_img_raw.data.any():
-=======
-    if yuv_img_raw is None or not yuv_img_raw.any():  
->>>>>>> Stashed changes
       continue
 
     imgff = np.frombuffer(yuv_img_raw.data, dtype=np.uint8).reshape((vipc_client.height * 3 // 2, vipc_client.width))
