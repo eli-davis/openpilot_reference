@@ -22,14 +22,16 @@ from tools.lib.helpers import save_log
 # ____
 # ____
 
-sys.path.insert(0, "/home/deepview/SSD/pathfinder/src")
+#sys.path.append("/home/deepview/SSD/pathfinder/src")
 #sys.path.insert(0, "/home/deepview/SSD/pathfinder/src/utils/transformations")
-from control import mode, ControlStateMachine
+#from control import mode, ControlStateMachine
 
 
 from termcolor import cprint as print_in_color
 import numpy as np
 import cv2
+
+from pycuda import driver as cuda
 
 def img_to_rgb(yuv_img_raw):
   imgff = np.frombuffer(yuv_img_raw.data, dtype=np.uint8).reshape((1208 * 3 // 2, 1928))
@@ -44,7 +46,7 @@ def img_to_rgb(yuv_img_raw):
 
 TEST_ROUTE = "4cf7a6ad03080c90|2021-09-29--13-46-36"
 SEGMENT = 0
-MAX_FRAMES = 10
+MAX_FRAMES = 5
 NAV_FRAMES = 0
 
 NO_NAV = True
@@ -242,13 +244,28 @@ if __name__ == "__main__":
   # ____
 
 
-  control_loop = ControlStateMachine(active_mode=mode.step_through, model_name="supercombo_laptop")
 
-  prev_main_img_comma_format = self.convert_image(prev_main_img_rgb, control_loop.model_transform_main)
-  prev_wide_img_comma_format = self.convert_image(prev_wide_img_rgb, control_loop.model_transform_extra)
+  '''
 
-  main_img_comma_format = self.convert_image(main_img_rgb, control_loop.model_transform_main)
-  wide_img_comma_format = self.convert_image(wide_img_rgb, control_loop.model_transform_extra)
+  #print("OK0")
+  #context = cuda.Device(0).make_context()
+  #control_loop = ControlStateMachine(active_mode=mode.step_through, model_name="supercombo_laptop")
+  #print("OK0.5")
+
+  prev_main_img_comma_format = control_loop.convert_image(prev_main_img_rgb, control_loop.model_transform_main)
+  prev_wide_img_comma_format = control_loop.convert_image(prev_wide_img_rgb, control_loop.model_transform_extra)
+
+  main_img_comma_format = control_loop.convert_image(main_img_rgb, control_loop.model_transform_main)
+  wide_img_comma_format = control_loop.convert_image(wide_img_rgb, control_loop.model_transform_extra)
+
+  np.save('/home/deepview/SSD/pathfinder/src/get_data/images/main_image.npy', main_img_comma_format)
+  np.save('/home/deepview/SSD/pathfinder/src/get_data/images/wide_image.npy', wide_img_comma_format)
+  np.save('/home/deepview/SSD/pathfinder/src/get_data/images/prev_main_image.npy', prev_main_img_comma_format)
+  np.save('/home/deepview/SSD/pathfinder/src/get_data/images/prev_wide_image.npy', prev_wide_img_comma_format)
+
+  print("OK1")
+  #os._exit(0)
+  print("OK2")
 
   # ____
   timestamp = str(time.time())
@@ -258,6 +275,10 @@ if __name__ == "__main__":
   control_loop.run_inference()
 
   os._exit(0)
+
+  '''
+
+  print("OK")
 
   # run replays
   log_msgs = model_replay(lr, frs)
