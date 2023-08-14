@@ -11,6 +11,7 @@ from selfdrive.car.car_helpers import interface_names
 from selfdrive.test.openpilotci import get_url, upload_file
 from selfdrive.test.process_replay.compare_logs import compare_logs
 from selfdrive.test.process_replay.process_replay import ProcessConfig, get_car_params_callback, FrequencyBasedRcvCallback, NUMPY_TOLERANCE, PROC_REPLAY_DIR
+from selfdrive.test.process_replay.process_replay import controlsd_config_callback, controlsd_fingerprint_callback, controlsd_rcv_callback
 from selfdrive.test.process_replay.process_replay import check_openpilot_enabled, replay_process
 from system.version import get_commit
 from tools.lib.filereader import FileReader
@@ -113,9 +114,9 @@ def run_test():
 
     '''
     CONFIGS = []
+    '''
 
-    CONFIGS.append(
-      ProcessConfig(
+    cfg = ProcessConfig(
         proc_name="controlsd",
         pubs=[
           "can", "deviceState", "pandaStates", "peripheralState", "liveCalibration", "driverMonitoringState",
@@ -131,9 +132,9 @@ def run_test():
         tolerance=NUMPY_TOLERANCE,
         processing_time=0.004,
         main_pub="can",
-      )
     )
 
+    '''
     CONFIGS.append(
       ProcessConfig(
         proc_name="radard",
@@ -147,7 +148,7 @@ def run_test():
     )
     '''
 
-    cfg = ProcessConfig(
+    cfg1 = ProcessConfig(
               proc_name="plannerd",
               pubs=["modelV2", "carControl", "carState", "controlsState", "radarState"],
               subs=["lateralPlan", "longitudinalPlan", "uiPlan"],
@@ -285,7 +286,12 @@ def run_test():
     #REFERENCE_COMMIT_PATH = os.path.join(PROC_REPLAY_DIR, "ref_commit")
     #ref_commit = open(REFERENCE_COMMIT_PATH).read().strip()
 
-    cur_commit = get_commit()
+    # updated daily? seems to call github
+    #cur_commit = get_commit()
+
+    cur_commit = "bc5c38bbd833316331d32c0eeb8048c56040bd2f"
+    print(cur_commit)
+
     REFERENCE_DATA_PATH = os.path.join(PROC_REPLAY_DIR, "fakedata/")
     ref_log_path = os.path.join(REFERENCE_DATA_PATH, f"{segment}_{cfg.proc_name}_{cur_commit}.bz2")
 

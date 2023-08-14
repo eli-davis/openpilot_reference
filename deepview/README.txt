@@ -37,10 +37,13 @@ https://github.com/intel/compute-runtime/releases
 # ____________________________________________________________ #
 # ____________________________________________________________ #
 
-# lateral planner test:
+# planner test:
+
+# - lateral planner test
+# - todo: longitudinal test
 
 #  /openpilot/selfdrive/controls/plannerd.py
-#
+
 # INPUTS LateralPlanner(CP)
 # - CP ("CarParams")
 # INPUTS LongitudinalPlanner(CP)
@@ -63,8 +66,32 @@ https://github.com/intel/compute-runtime/releases
 #
 #
 
+# ____________________________________________________________ #
+# ____________________________________________________________ #
 
+# controls test:
 
+# - car_state test
+# - todo: tbd
+
+#  /openpilot/selfdrive/controls/controls.py
+
+# INPUTS controls
+# __init__()
+# - num_pandas
+# - experimental_long_allowed = self.params.get_bool("ExperimentalLongitudinalEnabled")
+# - self.disengage_on_accelerator = self.params.get_bool("DisengageOnAccelerator")
+# - self.is_metric = self.params.get_bool("IsMetric")
+# - self.is_ldw_enabled = self.params.get_bool("IsLdwEnabled")
+# - openpilot_enabled_toggle = self.params.get_bool("OpenpilotEnabledToggle")
+# - passive = self.params.get_bool("Passive") or not openpilot_enabled_toggle
+# step()
+# - self.is_metric = self.params.get_bool("IsMetric")
+# - self.experimental_mode = self.params.get_bool("ExperimentalMode") and self.CP.openpilotLongitudinalControl
+# 
+#
+# OUTPUTS car_state
+#
 # ____________________________________________________________ #
 # ____________________________________________________________ #
 
