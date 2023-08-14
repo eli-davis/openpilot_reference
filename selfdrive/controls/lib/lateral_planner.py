@@ -146,3 +146,5 @@ class LateralPlanner:
     lateralPlan.laneChangeDirection = self.DH.lane_change_direction
 
     pm.send('lateralPlan', plan_send)
+
+    return lateralPlan

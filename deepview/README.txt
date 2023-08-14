@@ -30,6 +30,44 @@ scons -u -j$(nproc)
 # ____________________________________________________________ #
 # ____________________________________________________________ #
 
+# opencl issue - to fix install opencl:
+
+https://github.com/intel/compute-runtime/releases
+
+# ____________________________________________________________ #
+# ____________________________________________________________ #
+
+# lateral planner test:
+
+#  /openpilot/selfdrive/controls/plannerd.py
+#
+# INPUTS LateralPlanner(CP)
+# - CP ("CarParams")
+# INPUTS LongitudinalPlanner(CP)
+# - CP ("CarParams")
+#
+# INPUTS lateral_planner.update(sm)
+# - sm['controlsState'].curvature
+# - sm['carState'].vEgo
+# - sm['modelV2']
+# - sm['carState']
+# - sm['carControl'].latActive
+#
+# INPUTS lateral_planner.publish(sm, pm)
+# - plan_send.valid = sm.all_checks(service_list=['carState', 'controlsState', 'modelV2'])
+# - lateralPlan.modelMonoTime = sm.logMonoTime['modelV2']
+#
+# OUTPUTS lateral_planner.publish(sm, pm)
+# - plan_send = messaging.new_message('lateralPlan')
+#
+#
+#
+
+
+
+# ____________________________________________________________ #
+# ____________________________________________________________ #
+
 6) replay model:
 
 cd selfdrive/test/process_replay

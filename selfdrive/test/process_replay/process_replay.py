@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+# B"H
+
 import os
 import time
 import copy
@@ -32,6 +33,13 @@ NUMPY_TOLERANCE = 1e-7
 PROC_REPLAY_DIR = os.path.dirname(os.path.abspath(__file__))
 FAKEDATA = os.path.join(PROC_REPLAY_DIR, "fakedata/")
 
+# ___________________________________________________________________ #
+# ___________________________________________________________________ #
+
+from termcolor import cprint as print_in_color
+
+# ___________________________________________________________________ #
+# ___________________________________________________________________ #
 
 class ReplayContext:
   def __init__(self, cfg):
@@ -213,6 +221,7 @@ class ProcessContainer:
           time.sleep(0)
 
   def stop(self):
+    print_in_color("STOP", "red")
     with self.prefix:
       self.process.signal(signal.SIGKILL)
       self.process.stop()
@@ -663,6 +672,9 @@ def _replay_multi_process(
     internal_pub_index_heap: List[Tuple[int, int]] = []
 
     pbar = tqdm(total=len(external_pub_queue), disable=disable_progress)
+
+    iteration_i = 0
+
     while len(external_pub_queue) != 0 or (len(internal_pub_index_heap) != 0 and not all(c.has_empty_queue for c in containers)):
       if len(internal_pub_index_heap) == 0 or (len(external_pub_queue) != 0 and external_pub_queue[0].logMonoTime < internal_pub_index_heap[0][0]):
         msg = external_pub_queue.pop(0)
@@ -673,7 +685,15 @@ def _replay_multi_process(
 
       target_containers = pubs_to_containers[msg.which()]
       for container in target_containers:
+
+        #print_in_color(f"[{iteration_i:04}] type(msg)={type(msg)}", "yellow")
+        #print_in_color(f"[{iteration_i:04}] type(frs)={type(frs)}", "yellow")
+        #print_in_color(f"[{iteration_i:04}] msg: {msg.which()}", "yellow")
+        #print_in_color(f"[{iteration_i:04}] frs={frs}", "yellow")
         output_msgs = container.run_step(msg, frs)
+        #print_in_color(f"[{iteration_i:04}] output_msgs={output_msgs}", "yellow")
+        iteration_i += 1
+
         for m in output_msgs:
           if m.which() in all_pubs:
             internal_pub_queue.append(m)

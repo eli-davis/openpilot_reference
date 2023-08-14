@@ -10,6 +10,10 @@ from selfdrive.controls.lib.longitudinal_planner import LongitudinalPlanner
 from selfdrive.controls.lib.lateral_planner import LateralPlanner
 import cereal.messaging as messaging
 
+import json
+import signal
+from termcolor import cprint as print_in_color
+
 def cumtrapz(x, t):
   return np.concatenate([[0], np.cumsum(((x[0:-1] + x[1:])/2) * np.diff(t))])
 
@@ -48,15 +52,53 @@ def plannerd_thread(sm=None, pm=None):
   if pm is None:
     pm = messaging.PubMaster(['longitudinalPlan', 'lateralPlan', 'uiPlan'])
 
+
+  iteration_i = 0
+  CarParams_dict = CP.to_dict()
+  CarParams_dict.pop("carFw", None)
+  with open('/home/deepview/SSD/pathfinder/src/planner/test/CP.json', 'w') as FILE:
+    json.dump({'CP': CarParams_dict}, FILE, indent=4)
+
   while True:
     sm.update()
 
     if sm.updated['modelV2']:
+
+      #
+      # save inputs
+      #
+      #print(f"[{iteration_i:04}]plannerd thread!")
+      car_state      = sm['carState'].to_dict()
+      controls_state = sm['controlsState'].to_dict()
+      modelV2        = sm['modelV2'].to_dict()
+      bool_lateral_control_active = sm['carControl'].latActive
+      input_values_dict = {
+        'car_state': car_state,
+        'controls_state': controls_state,
+        'modelV2': modelV2,
+        'bool_lateral_control_active': bool_lateral_control_active
+      }
+      with open(f'/home/deepview/SSD/pathfinder/src/planner/test/inputs/{iteration_i:04}.json', 'w') as FILE:
+        json.dump(input_values_dict, FILE, indent=4)
+
+      # plannerd loop
       lateral_planner.update(sm)
-      lateral_planner.publish(sm, pm)
+      lateral_plan = lateral_planner.publish(sm, pm)
       longitudinal_planner.update(sm)
       longitudinal_planner.publish(sm, pm)
       publish_ui_plan(sm, pm, lateral_planner, longitudinal_planner)
+
+      #
+      # save outputs
+      #
+      lateral_plan_dict = lateral_plan.as_reader().to_dict()
+      output_values_dict = {
+        'lateral_plan': lateral_plan_dict,
+      }
+      with open(f'/home/deepview/SSD/pathfinder/src/planner/test/outputs/{iteration_i:04}.json', 'w') as FILE:
+        json.dump(output_values_dict, FILE, indent=4)
+      iteration_i += 1
+
 
 def main(sm=None, pm=None):
   plannerd_thread(sm, pm)
