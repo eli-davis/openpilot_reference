@@ -69,6 +69,36 @@ https://github.com/intel/compute-runtime/releases
 # ____________________________________________________________ #
 # ____________________________________________________________ #
 
+# update can
+
+# controlsd.data_sample() gets a copy of CarState (from can_strs)
+# (controlsd.CI.cp.vl holds the can values)
+#
+# testing - save the following for each timestep:
+# - can_binary.json (from can_strs)
+# - can_values.json (can_values['Can_ID']['property'] //latest only)
+# - car_state.json
+#
+# --> /openpilot/selfdrive/car/controls/controlsd.data_sample(): CS = self.CI.update(self.CC, can_strs)
+#     --> controlsd.CI = /openpilot/selfdrive/car/CarInterfaceBase() // /openpilot/selfdrive.car/ford/interface.CarInterface()
+#        -->  controlsd.CI.update() [called on CarInterfaceBase]
+#             --> controlsd.CI.cp.update_strings(can_strings) [called from CarInterfaceBase] 
+#                 --> /openpilot/opendbc/can.parser_pyx.pyx: CanParser.update_strings(can_strings)
+#                     --> /openpilot/opendbc/can.parser.cc: CANParser::update_strings()
+#                     [overwrites] within loop: [this happens in parser_pyx.pyx]
+#                     controls.CI.cp.vl[cv.address][cv_name] = cv.value
+#
+#        -->  controlsd.CI._update() [called on CarInterface]
+#             CS = controlsd.CI.CS.update(controld.CI.cp) [where the cp is updated with the latest can in cp.vl]
+#     --> controld CS (value @ time t of controlsd.CI.CS)    
+#
+# CI: Car Interface
+# CS: Car State
+# cp: can parser
+
+# ____________________________________________________________ #
+# ____________________________________________________________ #
+
 # controls test:
 
 # - car_state test
@@ -85,10 +115,14 @@ https://github.com/intel/compute-runtime/releases
 # - self.is_ldw_enabled = self.params.get_bool("IsLdwEnabled")
 # - openpilot_enabled_toggle = self.params.get_bool("OpenpilotEnabledToggle")
 # - passive = self.params.get_bool("Passive") or not openpilot_enabled_toggle
+#
 # step()
 # - self.is_metric = self.params.get_bool("IsMetric")
 # - self.experimental_mode = self.params.get_bool("ExperimentalMode") and self.CP.openpilotLongitudinalControl
-# 
+#
+# data_sample() 
+# - self.sm.update(0)
+# - sm['lateralPlan']
 #
 # OUTPUTS car_state
 #

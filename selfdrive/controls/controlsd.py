@@ -28,6 +28,8 @@ from selfdrive.controls.lib.alertmanager import AlertManager, set_offroad_alert
 from selfdrive.controls.lib.vehicle_model import VehicleModel
 from system.hardware import HARDWARE
 
+from termcolor import cprint as print_in_color
+
 SOFT_DISABLE_TIME = 3  # seconds
 LDW_MIN_SPEED = 31 * CV.MPH_TO_MS
 LANE_DEPARTURE_THRESHOLD = 0.1
@@ -78,6 +80,9 @@ class Controls:
     self.log_sock = messaging.sub_sock('androidLog')
 
     self.params = Params()
+
+    print_in_color(f"self.params={self.params}", "red")
+
     self.sm = sm
     if self.sm is None:
       ignore = ['testJoystick']
@@ -422,16 +427,53 @@ class Controls:
       if self.sm['liveLocationKalman'].excessiveResets:
         self.events.add(EventName.localizerMalfunction)
 
-  def data_sample(self):
+
+
+  def data_sample(self, iteration_i):
     """Receive data from sockets and update carState"""
 
     # Update carState from CAN
     can_strs = messaging.drain_sock_raw(self.can_sock, wait_for_one=True)
+
+    #########################################################################
+    #########################################################################
+
+    # can_dict format
+
+    #{'global_ts': time.time(),
+    #                'timestamp': msg.timestamp,
+    #                'arbitration_id': msg.arbitration_id,
+    #                'is_extended_id': msg.is_extended_id,
+    #                'channel': msg.channel,
+    #                'dlc': msg.dlc,
+    #                'data': list(msg.data),
+    #                'is_fd': msg.is_fd,
+    #                'bitrate_switch': msg.bitrate_switch,
+    #                'error_state_indicator': msg.error_state_indicator})
+
+    #########################################################################
+    #########################################################################
+
+    if iteration_i == 1111:
+        print_in_color(f"can_strs={can_strs}", "cyan")
+        print_in_color(f"self.CC={self.CC}", "yellow")
+
     CS = self.CI.update(self.CC, can_strs)
+
+    if iteration_i == 1111:
+        print_in_color(f"self.CI.cp.vl={self.CI.cp.vl}", "red")
+        print_in_color(f"CS={CS}", "cyan")
+
+
     if len(can_strs) and REPLAY:
       self.can_log_mono_time = messaging.log_from_bytes(can_strs[0]).logMonoTime
 
     self.sm.update(0)
+
+    if iteration_i == 1111:
+        print_in_color(f"self.sm['lateralPlan']={self.sm['lateralPlan']}", "red")
+
+
 
     if not self.initialized:
       all_valid = CS.canValid and self.sm.all_checks()
@@ -676,7 +718,7 @@ class Controls:
 
     return CC, lac_log
 
-  def publish_logs(self, CS, start_time, CC, lac_log):
+  def publish_logs(self, CS, start_time, CC, lac_log, iteration_i):
     """Send actuators and hud commands to the car, send controlsstate and MPC logging"""
 
     # Orientation and angle rates can be useful for carcontroller
@@ -840,7 +882,11 @@ class Controls:
     # copy CarControl to pass to CarInterface on the next iteration
     self.CC = CC
 
-  def step(self):
+    # output
+    if iteration_i == 0:
+        print_in_color("[controlds: publish_logs] updated CC={CC}", "red")
+
+  def step(self, iteration_i):
     start_time = sec_since_boot()
     self.prof.checkpoint("Ratekeeper", ignore=True)
 
@@ -848,7 +894,7 @@ class Controls:
     self.experimental_mode = self.params.get_bool("ExperimentalMode") and self.CP.openpilotLongitudinalControl
 
     # Sample data from sockets and get a carState
-    CS = self.data_sample()
+    CS = self.data_sample(iteration_i)
     cloudlog.timestamp("Data sampled")
     self.prof.checkpoint("Sample")
 
@@ -866,17 +912,24 @@ class Controls:
     self.prof.checkpoint("State Control")
 
     # Publish data
-    self.publish_logs(CS, start_time, CC, lac_log)
+    self.publish_logs(CS, start_time, CC, lac_log, iteration_i)
     self.prof.checkpoint("Sent")
 
     self.CS_prev = CS
 
   def controlsd_thread(self):
+
+    iteration_i = 0
+
     while True:
-      self.step()
+
+      #print_in_color(f"[controlsd {iteration_i:04}]", "yellow")
+
+      self.step(iteration_i)
       self.rk.monitor_time()
       self.prof.display()
 
+      iteration_i += 1
 
 def main(sm=None, pm=None, logcan=None):
   controls = Controls(sm, pm, logcan)
