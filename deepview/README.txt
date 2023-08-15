@@ -76,7 +76,8 @@ https://github.com/intel/compute-runtime/releases
 #
 # testing - save the following for each timestep:
 # - can_binary.json (from can_strs)
-# - can_values.json (can_values['Can_ID']['property'] //latest only)
+# - can_values_from_vehicle.json (can_values['Can_ID']['property'] //latest only)
+# - can_values_from_vision_computer.json (can_values['Can_ID']['property'] //latest only)
 # - car_state.json
 #
 # --> /openpilot/selfdrive/car/controls/controlsd.data_sample(): CS = self.CI.update(self.CC, can_strs)
@@ -89,12 +90,13 @@ https://github.com/intel/compute-runtime/releases
 #                     controls.CI.cp.vl[cv.address][cv_name] = cv.value
 #
 #        -->  controlsd.CI._update() [called on CarInterface]
-#             CS = controlsd.CI.CS.update(controld.CI.cp) [where the cp is updated with the latest can in cp.vl]
+#             CS = controlsd.CI.CS.update(controld.CI.cp, controlsd.CI.cp_cam) [where the cp is updated with the latest can in cp.vl]
 #     --> controld CS (value @ time t of controlsd.CI.CS)    
 #
 # CI: Car Interface
 # CS: Car State
-# cp: can parser
+# cp: can parser (from vehicle)
+# cp_cam: can parser (from vehicle vision computer)
 
 # ____________________________________________________________ #
 # ____________________________________________________________ #

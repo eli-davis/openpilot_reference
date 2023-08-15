@@ -29,6 +29,7 @@ from selfdrive.controls.lib.vehicle_model import VehicleModel
 from system.hardware import HARDWARE
 
 from termcolor import cprint as print_in_color
+import json
 
 SOFT_DISABLE_TIME = 3  # seconds
 LDW_MIN_SPEED = 31 * CV.MPH_TO_MS
@@ -461,7 +462,15 @@ class Controls:
     CS = self.CI.update(self.CC, can_strs)
 
     if iteration_i == 1111:
-        print_in_color(f"self.CI.cp.vl={self.CI.cp.vl}", "red")
+        # skip can_IDs with no data
+        filtered_dict = {k: v for k, v in self.CI.cp.vl.items() if v}
+        json_dict = json.dumps(filtered_dict, indent=4)
+        print_in_color(json_dict, "green")
+
+        filtered_dict2 = {k: v for k, v in self.CI.cp_cam.vl.items() if v}
+        json_dict2 = json.dumps(filtered_dict2, indent=4)
+        print_in_color(json_dict2, "red")
+        #print_in_color(f"self.CI.cp.vl={self.CI.cp.vl}", "red")
         print_in_color(f"CS={CS}", "cyan")
 
 
