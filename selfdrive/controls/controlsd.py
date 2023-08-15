@@ -456,8 +456,12 @@ class Controls:
     #########################################################################
 
     if iteration_i == 1111:
-        print_in_color(f"can_strs={can_strs}", "cyan")
-        print_in_color(f"self.CC={self.CC}", "yellow")
+        print_in_color(f"can_strs={can_strs[0]}", "cyan")
+        print_in_color(f"type(can_strs)={type(can_strs[0])}", "red")
+        #print_in_color(f"len(can_strs)={len(can_strs)}", "red")
+        # CC ignored for updating car_state
+        #print_in_color(f"self.CC={self.CC}", "yellow")
+
 
     CS = self.CI.update(self.CC, can_strs)
 
@@ -471,7 +475,7 @@ class Controls:
         json_dict2 = json.dumps(filtered_dict2, indent=4)
         print_in_color(json_dict2, "red")
         #print_in_color(f"self.CI.cp.vl={self.CI.cp.vl}", "red")
-        print_in_color(f"CS={CS}", "cyan")
+        print_in_color(f"CS={CS.to_dict()}", "cyan")
 
 
     if len(can_strs) and REPLAY:
@@ -891,9 +895,9 @@ class Controls:
     # copy CarControl to pass to CarInterface on the next iteration
     self.CC = CC
 
-    # output
-    if iteration_i == 0:
-        print_in_color("[controlds: publish_logs] updated CC={CC}", "red")
+    # todo: output
+    #if iteration_i == 0:
+    #    print_in_color("[controlds: publish_logs] updated CC={CC}", "red")
 
   def step(self, iteration_i):
     start_time = sec_since_boot()
