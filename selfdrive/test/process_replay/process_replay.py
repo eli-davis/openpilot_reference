@@ -49,7 +49,7 @@ class ReplayContext:
     self.main_pub_drained = cfg.main_pub_drained
     self.unlocked_pubs = cfg.unlocked_pubs
     assert(len(self.pubs) != 0 or self.main_pub is not None)
-  
+
   def __enter__(self):
     self.open()
 
@@ -229,6 +229,12 @@ class ProcessContainer:
       self.prefix.clean_dirs()
 
   def run_step(self, msg: capnp._DynamicStructReader, frs: Optional[Dict[str, Any]]) -> List[capnp._DynamicStructReader]:
+
+    #print(f"proc_name={self.cfg.proc_name}")
+    DATA_DIR_PATH = "/home/deepview/SSD/pathfinder/src/can/test"
+    if not hasattr(self, "iteration_i"):
+        self.iteration_i = 0
+
     assert self.rc and self.pm and self.sockets and self.process.proc
 
     output_msgs = []
@@ -238,6 +244,7 @@ class ProcessContainer:
         end_of_cycle = self.cfg.should_recv_callback(msg, self.cfg, self.cnt)
 
       self.msg_queue.append(msg)
+
       if end_of_cycle:
         self.rc.wait_for_recv_called()
 
@@ -251,6 +258,7 @@ class ProcessContainer:
         if self.cfg.main_pub and self.cfg.main_pub_drained:
           trigger_empty_recv = next((True for m in self.msg_queue if m.which() == self.cfg.main_pub), False)
 
+
         for m in self.msg_queue:
           self.pm.send(m.which(), m.as_builder())
           # send frames if needed
@@ -261,6 +269,45 @@ class ProcessContainer:
             img = frs[m.which()].get(camera_state.frameId, pix_fmt="nv12")[0]
             self.vipc_server.send(camera_meta.stream, img.flatten().tobytes(),
                                   camera_state.frameId, camera_state.timestampSof, camera_state.timestampEof)
+
+        if self.cfg.proc_name == "controlsd":
+            #print_in_color(f"[process_replay: run_step()] i={self.iteration_i:04} len(self.msg_queue)={len(self.msg_queue)}", "red")
+            for m in self.msg_queue:
+                #print(f"m.which()={m.which}")
+
+                # for each timestep 0-5999:
+                # - save can to json in hex format
+                #
+                # (60 second segment // 100 controlsd steps per second)
+                if m.which() == "can":
+                    #print("can")
+                    #print(f"type(m)={type(m)}")
+                    #print_in_color(f"m={m}", "red")
+
+                    can_dict = m.to_dict()
+
+                    # Convert bytes to hex strings
+                    for can_entry in can_dict['can']:
+                        if 'dat' in can_entry and isinstance(can_entry['dat'], bytes):
+                            #print_in_color(f"key=dat", "cyan")
+                            can_entry['dat'] = can_entry['dat'].hex()
+
+                    can_dict['can'].sort(key=lambda x: x['address'])
+
+                    #print_in_color(f"can_dict={can_dict}", "red")
+                    #can_json = json.dumps(can_dict, indent=4)
+                    #print_in_color(f"can_json={can_json}", "yellow")
+
+                    dir_name = f"{self.iteration_i:04}"  # 4 digits, zero-padded
+                    dir_path = os.path.join(DATA_DIR_PATH, dir_name)
+                    os.makedirs(dir_path, exist_ok=True)
+                    json_path = os.path.join(dir_path, "can_hex.json")
+                    with open(json_path, "w") as FILE:
+                        json.dump(can_dict, FILE, indent=4)
+
+
+        self.iteration_i += 1
+
         self.msg_queue = []
 
         self.rc.unlock_sockets()

@@ -455,27 +455,60 @@ class Controls:
     #########################################################################
     #########################################################################
 
-    if iteration_i == 1111:
-        print_in_color(f"can_strs={can_strs[0]}", "cyan")
-        print_in_color(f"type(can_strs)={type(can_strs[0])}", "red")
-        #print_in_color(f"len(can_strs)={len(can_strs)}", "red")
-        # CC ignored for updating car_state
-        #print_in_color(f"self.CC={self.CC}", "yellow")
+    DATA_DIR_PATH = "/home/deepview/SSD/pathfinder/src/can/test"
 
+    # for each timestep 0-5999:
+    # - save can values / car state
+    #
+    # (60 second segment // 100 controlsd steps per second)
+
+    dir_name = f"{iteration_i:04}"  # 4 digits, zero-padded
+    dir_path = os.path.join(DATA_DIR_PATH, dir_name)
+    os.makedirs(dir_path, exist_ok=True)
+
+    # (1) can_hex.json saved in /openpilot/selfdrive/test/process_replay.process_replay.run_step()
+    #
+    #print_in_color(f"can_strs={can_strs[0]}", "cyan")
+    #print_in_color(f"type(can_strs)={type(can_strs[0])}", "red")
+    #print_in_color(f"len(can_strs)={len(can_strs)}", "red")
+
+    # CC ignored for updating car_state
+    #
+    #print_in_color(f"self.CC={self.CC}", "yellow")
 
     CS = self.CI.update(self.CC, can_strs)
 
-    if iteration_i == 1111:
-        # skip can_IDs with no data
-        filtered_dict = {k: v for k, v in self.CI.cp.vl.items() if v}
-        json_dict = json.dumps(filtered_dict, indent=4)
-        print_in_color(json_dict, "green")
+    #print_in_color(f"self.CI.cp.vl={self.CI.cp.vl}", "red")
+    #print_in_color(f"self.CI.cp_cam.vl={self.CI.cp_cam.vl}", "red")
+    #print_in_color(f"CS={CS.to_dict()}", "cyan")
 
-        filtered_dict2 = {k: v for k, v in self.CI.cp_cam.vl.items() if v}
-        json_dict2 = json.dumps(filtered_dict2, indent=4)
-        print_in_color(json_dict2, "red")
-        #print_in_color(f"self.CI.cp.vl={self.CI.cp.vl}", "red")
-        print_in_color(f"CS={CS.to_dict()}", "cyan")
+    # (2) save parsed (vehicle) can values
+    #
+    # skip can_IDs with no data
+    vehicle_can_dict = {k: v for k, v in self.CI.cp.vl.items() if v}
+    vehicle_can_json_path = os.path.join(dir_path, "vehicle_can.json")
+    with open(vehicle_can_json_path, "w") as FILE:
+        json.dump(vehicle_can_dict, FILE, indent=4)
+    #vehicle_can_json = json.dumps(vehicle_can_dict, indent=4)
+    #print_in_color(vehicle_can_json, "green")
+
+    # (3) saved parsed (vision computer) can values
+    #
+    # skip can_IDs with no data
+    vision_computer_can_dict = {k: v for k, v in self.CI.cp_cam.vl.items() if v}
+    vision_computer_can_json_path = os.path.join(dir_path, "vision_computer_can.json")
+    with open(vision_computer_can_json_path, "w") as FILE:
+        json.dump(vision_computer_can_dict, FILE, indent=4)
+
+    #vision_computer_can_json = json.dumps(vision_computer_can_dict, indent=4)
+    #print_in_color(vision_computer_can_json, "red")
+
+    # (4) save car_state
+    car_state_json_path = os.path.join(dir_path, "car_state.json")
+    with open(car_state_json_path, "w") as FILE:
+        json.dump(CS.to_dict(), FILE, indent=4)
+    #car_state_json = json.dumps(CS.to_dict(), indent=4)
+    #print_in_color(car_state_json, "yellow")
 
 
     if len(can_strs) and REPLAY:
@@ -483,8 +516,12 @@ class Controls:
 
     self.sm.update(0)
 
-    if iteration_i == 1111:
-        print_in_color(f"self.sm['lateralPlan']={self.sm['lateralPlan']}", "red")
+    # (5) save lateral_plan received
+    lateral_plan_received_json_path = os.path.join(dir_path, "lateral_plan_received.json")
+    with open(lateral_plan_received_json_path, "w") as FILE:
+        json.dump(self.sm['lateralPlan'].to_dict(), FILE, indent=4)
+    #if iteration_i == 1111:
+    #print_in_color(f"self.sm['lateralPlan']={self.sm['lateralPlan'].to_dict()}", "red")
 
 
 
