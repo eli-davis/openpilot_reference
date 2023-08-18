@@ -37,6 +37,20 @@ https://github.com/intel/compute-runtime/releases
 # ____________________________________________________________ #
 # ____________________________________________________________ #
 
+# modelV2 test:
+
+# raw inputs
+# - liveCalibration [iteration_i=0]
+# - wideRoadCameraState [image_info: only frameId used]
+# - roadCameraState [image_info: only frameId used]
+# - lateral_plan.desire [not in process_replay] /openpilot/seldrive/modeld/modeld.cc: int desire = ((int)sm["lateralPlan"].getLateralPlan().getDesire());
+
+# - model inputs
+# - model outputs
+
+# ____________________________________________________________ #
+# ____________________________________________________________ #
+
 # planner test:
 
 # - lateral planner test

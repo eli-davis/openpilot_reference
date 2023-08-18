@@ -5,6 +5,8 @@ import sys
 import numpy as np
 from typing import Tuple, Dict, Union, Any
 
+from termcolor import cprint as print_in_color
+
 os.environ["OMP_NUM_THREADS"] = "4"
 os.environ["OMP_WAIT_POLICY"] = "PASSIVE"
 
@@ -30,43 +32,40 @@ def write(d):
   os.write(1, d.tobytes())
 
 def run_loop(m, tf8_input=False):
-  ishapes = [[1]+ii.shape[1:] for ii in m.get_inputs()]
-  keys = [x.name for x in m.get_inputs()]
-  itypes = [ORT_TYPES_TO_NP_TYPES[x.type] for x in m.get_inputs()]
+  input_shapes = [[1]+ii.shape[1:] for ii in m.get_inputs()]
+  input_keys = [x.name for x in m.get_inputs()]
+  input_types = [ORT_TYPES_TO_NP_TYPES[x.type] for x in m.get_inputs()]
 
   # run once to initialize CUDA provider
   if "CUDAExecutionProvider" in m.get_providers():
-    m.run(None, dict(zip(keys, [np.zeros(shp, dtype=itp) for shp, itp in zip(ishapes, itypes)])))
+    m.run(None, dict(zip(input_keys, [np.zeros(shp, dtype=itp) for shp, itp in zip(input_shapes, input_types)])))
 
   DATA_DIR_PATH = "/home/deepview/SSD/pathfinder/src/get_data/replay"
 
-  FILE = open('/home/deepview/SSD/pathfinder/src/get_data/replay/log.txt', 'a') as f:
-  FILE.write("ready to run onnx model")
+  #print_in_color("[/openpilot/selfdrive/modeld/onnx_runnner: run_loop()]", color="red", file=sys.stderr)
 
-  print("ready to run onnx model", keys, ishapes, file=sys.stderr)
+  print_in_color(f"_______________________", color="yellow", file=sys.stderr)
+  print_in_color(f"_______________________", color="yellow", file=sys.stderr)
+  print_in_color(f"ready to run onnx model", color="yellow", file=sys.stderr)
+
+  print_in_color(f"input_keys={input_keys}", color="yellow", file=sys.stderr)
+  print_in_color(f"input_shapes={input_shapes}", color="yellow", file=sys.stderr)
+  print_in_color(f"input_types={input_types}", color="yellow", file=sys.stderr)
+
   while 1:
     inputs = []
-    for k, shp, itp in zip(keys, ishapes, itypes):
-
-      print(f"ishapes={ishapes}", file=sys.stderr)
-      print(f"itypes={itypes}", file=sys.stderr)
-
-      FILE.write(f"ishapes={ishapes}")
-      FILE.write(f"itypes={itypes}")
-
+    for k, shp, itp in zip(input_keys, input_shapes, input_types):
 
       ts = np.product(shp)
       #print("reshaping %s with offset %d" % (str(shp), offset), file=sys.stderr)
       inputs.append(read(ts, (k=='input_img' and tf8_input)).reshape(shp).astype(itp))
 
-      print(f"inputs.shape={inputs.shape}", file=sys.stderr)
+      #print_in_color(f"inputs.shape={inputs.shape}", color="red", file=sys.stderr)
+      #print_in_color(f"inputs={inputs}", color="red", file=sys.stderr)
+      #print_in_color(f"type(inputs)={type(inputs)}", color="red", file=sys.stderr)
 
-      FILE.write(f"inputs.shape={inputs.shape}")
 
-
-    FILE.close()
-
-    ret = m.run(None, dict(zip(keys, inputs)))
+    ret = m.run(None, dict(zip(input_keys, inputs)))
     #print(ret, file=sys.stderr)
     for r in ret:
       write(r.astype(np.float32))
@@ -91,7 +90,8 @@ if __name__ == "__main__":
     provider = 'CPUExecutionProvider'
 
   try:
-    print("Onnx selected provider: ", [provider], file=sys.stderr)
+    provider = 'CPUExecutionProvider'
+    print_in_color(f"Onnx selected provider: {[provider]}", color="yellow", file=sys.stderr)
     ort_session = ort.InferenceSession(sys.argv[1], options, providers=[provider])
     print("Onnx using ", ort_session.get_providers(), file=sys.stderr)
     run_loop(ort_session, tf8_input=("--use_tf8" in sys.argv))

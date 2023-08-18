@@ -68,12 +68,13 @@ void save_image_from_visionbuf(VisionBuf *buf, int counter, const std::string &f
     std::ofstream outfile(indexed_filename, std::ios::binary);
 
 
-    std::cout<<"buf->len: "<<buf->len<<std::endl;
-    std::cout<<"buf->width: "<<buf->width<<std::endl;
-    std::cout<<"buf->height: "<<buf->height<<std::endl;
-    std::cout<<"buf->stride: "<<buf->stride<<std::endl;
-    std::cout<<"buf->uv_offset: "<<buf->uv_offset<<std::endl;
-    std::cout << "size_t: " << sizeof(size_t) << std::endl;
+    //std::cout<<"buf->len: "<<buf->len<<std::endl;
+    //std::cout<<"buf->width: "<<buf->width<<std::endl;
+    //std::cout<<"buf->height: "<<buf->height<<std::endl;
+    //std::cout<<"buf->stride: "<<buf->stride<<std::endl;
+    //std::cout<<"buf->uv_offset: "<<buf->uv_offset<<std::endl;
+    //std::cout << "size_t: " << sizeof(size_t) << std::endl;
+
     // Write width, height, and stride as integers.
     outfile.write(reinterpret_cast<const char*>(&buf->width), sizeof(buf->width));
     outfile.write(reinterpret_cast<const char*>(&buf->height), sizeof(buf->height));

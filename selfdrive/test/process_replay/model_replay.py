@@ -47,7 +47,8 @@ def img_to_rgb(yuv_img_raw):
 
 TEST_ROUTE = "4cf7a6ad03080c90|2021-09-29--13-46-36"
 SEGMENT = 0
-MAX_FRAMES = 5
+MAX_FRAMES = 50
+#MAX_FRAMES = 500000
 NAV_FRAMES = 0
 
 NO_NAV = True
@@ -142,12 +143,12 @@ def model_replay(lr, frs):
 
   # modeld is using frame pairs
   modeld_logs = trim_logs_to_max_frames(lr, MAX_FRAMES, {"roadCameraState", "wideRoadCameraState"}, {"roadEncodeIdx", "wideRoadEncodeIdx"})
-  dmodeld_logs = trim_logs_to_max_frames(lr, MAX_FRAMES, {"driverCameraState"}, {"driverEncodeIdx"})
+
+  #dmodeld_logs = trim_logs_to_max_frames(lr, MAX_FRAMES, {"driverCameraState"}, {"driverEncodeIdx"})
 
   if not SEND_EXTRA_INPUTS:
     modeld_logs = [msg for msg in modeld_logs if msg.which() not in ["liveCalibration", "lateralPlan"]]
-    dmodeld_logs = [msg for msg in dmodeld_logs if msg.which() not in ["liveCalibration", "lateralPlan"]]
-
+    #dmodeld_logs = [msg for msg in dmodeld_logs if msg.which() not in ["liveCalibration", "lateralPlan"]]
 
 
 
@@ -155,16 +156,16 @@ def model_replay(lr, frs):
   cal_msg = next(msg for msg in lr if msg.which() == "liveCalibration").as_builder()
   cal_msg.logMonoTime = lr[0].logMonoTime
   modeld_logs.insert(0, cal_msg.as_reader())
-  dmodeld_logs.insert(0, cal_msg.as_reader())
+  #dmodeld_logs.insert(0, cal_msg.as_reader())
 
   modeld = get_process_config("modeld")
-  dmonitoringmodeld = get_process_config("dmonitoringmodeld")
+  #dmonitoringmodeld = get_process_config("dmonitoringmodeld")
 
   try:
     if spinner:
       spinner.update("running model replay")
     modeld_msgs = replay_process(modeld, modeld_logs, frs)
-    dmonitoringmodeld_msgs = replay_process(dmonitoringmodeld, dmodeld_logs, frs)
+    #dmonitoringmodeld_msgs = replay_process(dmonitoringmodeld, dmodeld_logs, frs)
     log_msgs.extend([m for m in modeld_msgs if m.which() == "modelV2"])
     #log_msgs.extend([m for m in dmonitoringmodeld_msgs if m.which() == "driverStateV2"])
   finally:
@@ -184,7 +185,7 @@ if __name__ == "__main__":
   lr = list(LogReader(get_url(TEST_ROUTE, SEGMENT)))
   frs = {
     'roadCameraState': FrameReader(get_url(TEST_ROUTE, SEGMENT, log_type="fcamera"), readahead=True),
-    'driverCameraState': FrameReader(get_url(TEST_ROUTE, SEGMENT, log_type="dcamera"), readahead=True),
+    #'driverCameraState': FrameReader(get_url(TEST_ROUTE, SEGMENT, log_type="dcamera"), readahead=True),
     'wideRoadCameraState': FrameReader(get_url(TEST_ROUTE, SEGMENT, log_type="ecamera"), readahead=True)
   }
 
@@ -228,19 +229,19 @@ if __name__ == "__main__":
 
   frame_id = 0
   prev_main_img = frs['roadCameraState'].get(frame_id, pix_fmt="nv12")[0]
-  prev_wide_img = frs['wideRoadCameraState'].get(frame_id, pix_fmt="nv12")[0]
+  #prev_wide_img = frs['wideRoadCameraState'].get(frame_id, pix_fmt="nv12")[0]
 
   prev_main_img_rgb = img_to_rgb(prev_main_img)
-  prev_wide_img_rgb = img_to_rgb(prev_wide_img)
+  #prev_wide_img_rgb = img_to_rgb(prev_wide_img)
 
   # ____
 
   frame_id = 1
   main_img = frs['roadCameraState'].get(frame_id, pix_fmt="nv12")[0]
-  wide_img = frs['wideRoadCameraState'].get(frame_id, pix_fmt="nv12")[0]
+  #wide_img = frs['wideRoadCameraState'].get(frame_id, pix_fmt="nv12")[0]
 
   main_img_rgb = img_to_rgb(main_img)
-  wide_img_rgb = img_to_rgb(wide_img)
+  #wide_img_rgb = img_to_rgb(wide_img)
 
   # ____
 
@@ -311,10 +312,14 @@ if __name__ == "__main__":
   for log_msg_i in range(0, len(log_msgs)):
       print_in_color(f"log_msgs[{log_msg_i}].modelV2.frameId={log_msgs[log_msg_i].modelV2.frameId}", "yellow")
 
-  print_in_color(f"log_msgs[0]={log_msgs[0]}", "yellow")
-  print_in_color(f"log_msgs[1]={log_msgs[1]}", "yellow")
-  print_in_color(f"log_msgs[2]={log_msgs[2]}", "yellow")
-  print_in_color(f"log_msgs[3]={log_msgs[3]}", "yellow")
+  print_in_color(f"type(log_msgs[0])={type(log_msgs[0])}", "cyan")
+  print_in_color(f"log_msgs[0].modelV2.to_dict()={log_msgs[0].modelV2.to_dict()}", "red")
+
+
+  #print_in_color(f"log_msgs[0]={log_msgs[0]}", "yellow")
+  #print_in_color(f"log_msgs[1]={log_msgs[1]}", "yellow")
+  #print_in_color(f"log_msgs[2]={log_msgs[2]}", "yellow")
+  #print_in_color(f"log_msgs[3]={log_msgs[3]}", "yellow")
 
   print("___________________")
   print("___________________")

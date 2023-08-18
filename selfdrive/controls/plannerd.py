@@ -56,7 +56,15 @@ def plannerd_thread(sm=None, pm=None):
   iteration_i = 0
   CarParams_dict = CP.to_dict()
   CarParams_dict.pop("carFw", None)
-  with open('/home/deepview/SSD/pathfinder/src/planner/test/CP.json', 'w') as FILE:
+
+  test_path  = "/home/deepview/SSD/pathfinder/src/planner/test"
+  test_inputs_path  = "/home/deepview/SSD/pathfinder/src/planner/test/inputs"
+  test_outputs_path = "/home/deepview/SSD/pathfinder/src/planner/test/outputs"
+  os.makedirs(test_path, exist_ok=True)
+  os.makedirs(test_inputs_path, exist_ok=True)
+  os.makedirs(test_outputs_path, exist_ok=True)
+
+  with open(f'{test_path}/CP.json', 'w') as FILE:
     json.dump({'CP': CarParams_dict}, FILE, indent=4)
 
   while True:
@@ -78,7 +86,8 @@ def plannerd_thread(sm=None, pm=None):
         'modelV2': modelV2,
         'bool_lateral_control_active': bool_lateral_control_active
       }
-      with open(f'/home/deepview/SSD/pathfinder/src/planner/test/inputs/{iteration_i:04}.json', 'w') as FILE:
+
+      with open(f'{test_inputs_path}/{iteration_i:04}.json', 'w') as FILE:
         json.dump(input_values_dict, FILE, indent=4)
 
       # plannerd loop
@@ -95,7 +104,7 @@ def plannerd_thread(sm=None, pm=None):
       output_values_dict = {
         'lateral_plan': lateral_plan_dict,
       }
-      with open(f'/home/deepview/SSD/pathfinder/src/planner/test/outputs/{iteration_i:04}.json', 'w') as FILE:
+      with open(f'{test_outputs_path}/{iteration_i:04}.json', 'w') as FILE:
         json.dump(output_values_dict, FILE, indent=4)
       iteration_i += 1
 
