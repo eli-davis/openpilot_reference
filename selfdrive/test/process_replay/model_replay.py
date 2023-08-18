@@ -31,6 +31,8 @@ from termcolor import cprint as print_in_color
 import numpy as np
 import cv2
 
+import json
+
 #from pycuda import driver as cuda
 
 def img_to_rgb(yuv_img_raw):
@@ -47,8 +49,8 @@ def img_to_rgb(yuv_img_raw):
 
 TEST_ROUTE = "4cf7a6ad03080c90|2021-09-29--13-46-36"
 SEGMENT = 0
-MAX_FRAMES = 50
-#MAX_FRAMES = 500000
+#MAX_FRAMES = 10
+MAX_FRAMES = 500000
 NAV_FRAMES = 0
 
 NO_NAV = True
@@ -287,33 +289,32 @@ if __name__ == "__main__":
 
   print("___________________")
   print("___________________")
-  print("___________________")
-  print("___________________")
-  print("___________________")
-  print("___________________")
-  print("___________________")
-  print("___________________")
-  print("___________________")
-  print("___________________")
-  print("___________________")
-  print("___________________")
-  print("___________________")
-  print("___________________")
-  print("___________________")
-  print("___________________")
-  print("___________________")
-  print("___________________")
-  print("___________________")
-  print("___________________")
-  print("___________________")
 
   print_in_color(f"len(log_msgs)={len(log_msgs)}", "yellow")
 
-  for log_msg_i in range(0, len(log_msgs)):
-      print_in_color(f"log_msgs[{log_msg_i}].modelV2.frameId={log_msgs[log_msg_i].modelV2.frameId}", "yellow")
 
-  print_in_color(f"type(log_msgs[0])={type(log_msgs[0])}", "cyan")
-  print_in_color(f"log_msgs[0].modelV2.to_dict()={log_msgs[0].modelV2.to_dict()}", "red")
+  for log_msg_i in range(0, len(log_msgs)):
+      #print_in_color(f"log_msgs[{log_msg_i}].modelV2.frameId={log_msgs[log_msg_i].modelV2.frameId}", "yellow")
+
+      # modeld output for frame0 is skipped (dir 0000) as no prev frame
+      frameId_i = log_msgs[log_msg_i].modelV2.frameId
+
+      modelV2_dict = log_msgs[log_msg_i].modelV2.to_dict()
+
+      print_in_color(f"frameId_i={frameId_i}", "yellow")
+      #print_in_color(f"modelV2_dict={modelV2_dict}", "yellow")
+
+      test_outputs_dir_path = f"/home/deepview/SSD/pathfinder/src/models/test/outputs/{frameId_i:04}"
+      os.makedirs(test_outputs_dir_path, exist_ok=True)
+
+      modelV2_output_path = os.path.join(test_outputs_dir_path, "modelV2.json")
+
+      with open(modelV2_output_path, 'w') as FILE:
+          json.dump(modelV2_dict, FILE, indent=4)
+
+
+  #print_in_color(f"type(log_msgs[0])={type(log_msgs[0])}", "cyan")
+  #print_in_color(f"log_msgs[0].modelV2.to_dict()={log_msgs[0].modelV2.to_dict()}", "red")
 
 
   #print_in_color(f"log_msgs[0]={log_msgs[0]}", "yellow")

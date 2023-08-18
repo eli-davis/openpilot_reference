@@ -7,6 +7,7 @@ from typing import Tuple, Dict, Union, Any
 
 from termcolor import cprint as print_in_color
 
+
 os.environ["OMP_NUM_THREADS"] = "4"
 os.environ["OMP_WAIT_POLICY"] = "PASSIVE"
 
@@ -48,9 +49,9 @@ def run_loop(m, tf8_input=False):
   print_in_color(f"_______________________", color="yellow", file=sys.stderr)
   print_in_color(f"ready to run onnx model", color="yellow", file=sys.stderr)
 
-  print_in_color(f"input_keys={input_keys}", color="yellow", file=sys.stderr)
-  print_in_color(f"input_shapes={input_shapes}", color="yellow", file=sys.stderr)
-  print_in_color(f"input_types={input_types}", color="yellow", file=sys.stderr)
+  # start at 1
+  # iteration at 0 has no model output
+  iteration_i = 1
 
   while 1:
     inputs = []
@@ -60,15 +61,39 @@ def run_loop(m, tf8_input=False):
       #print("reshaping %s with offset %d" % (str(shp), offset), file=sys.stderr)
       inputs.append(read(ts, (k=='input_img' and tf8_input)).reshape(shp).astype(itp))
 
-      #print_in_color(f"inputs.shape={inputs.shape}", color="red", file=sys.stderr)
-      #print_in_color(f"inputs={inputs}", color="red", file=sys.stderr)
-      #print_in_color(f"type(inputs)={type(inputs)}", color="red", file=sys.stderr)
+
+    test_inputs_dir_path  = f"/home/deepview/SSD/pathfinder/src/models/test/inputs/{iteration_i:04}"
+    os.makedirs(test_inputs_dir_path, exist_ok=True)
+
+    print_in_color(f"len(inputs)={len(inputs)}", color="red", file=sys.stderr)
+
+    print_in_color(f"input_keys={input_keys}", color="yellow", file=sys.stderr)
+    print_in_color(f"input_shapes={input_shapes}", color="yellow", file=sys.stderr)
+    print_in_color(f"input_types={input_types}", color="yellow", file=sys.stderr)
+
+    #print_in_color(f"inputs.shape={inputs.shape}", color="red", file=sys.stderr)
+    #print_in_color(f"inputs={inputs}", color="red", file=sys.stderr)
+    #print_in_color(f"type(inputs)={type(inputs)}", color="red", file=sys.stderr)
+
+    print_in_color(f"iteration_i={iteration_i}", color="red", file=sys.stderr)
+
+    for input_index in range(0, len(inputs)):
+
+        input_i = inputs[input_index]
+        input_key_i = input_keys[input_index]
+        input_i_filename = f"{input_key_i}.npy"
+        input_i_filepath = os.path.join(test_inputs_dir_path, input_i_filename)
+
+        print(f"saving filepath={input_i_filepath}", file=sys.stderr)
+        np.save(input_i_filepath, input_i)
 
 
     ret = m.run(None, dict(zip(input_keys, inputs)))
     #print(ret, file=sys.stderr)
     for r in ret:
       write(r.astype(np.float32))
+
+    iteration_i += 1
 
 
 if __name__ == "__main__":

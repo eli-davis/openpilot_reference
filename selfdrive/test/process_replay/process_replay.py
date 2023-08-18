@@ -33,13 +33,12 @@ NUMPY_TOLERANCE = 1e-7
 PROC_REPLAY_DIR = os.path.dirname(os.path.abspath(__file__))
 FAKEDATA = os.path.join(PROC_REPLAY_DIR, "fakedata/")
 
-# ___________________________________________________________________ #
-# ___________________________________________________________________ #
+import numpy as np
+import cv2
 
 from termcolor import cprint as print_in_color
 
-# ___________________________________________________________________ #
-# ___________________________________________________________________ #
+
 
 class ReplayContext:
   def __init__(self, cfg):
@@ -266,6 +265,8 @@ class ProcessContainer:
             camera_state = getattr(m, m.which())
             camera_meta = meta_from_camera_state(m.which())
             assert frs is not None
+            #print_in_color(f"_______________________________________", "yellow")
+            #print_in_color(f"m.which()={m.which()} camera_state.frameId={camera_state.frameId}", "yellow")
             img = frs[m.which()].get(camera_state.frameId, pix_fmt="nv12")[0]
             self.vipc_server.send(camera_meta.stream, img.flatten().tobytes(),
                                   camera_state.frameId, camera_state.timestampSof, camera_state.timestampEof)
@@ -275,16 +276,48 @@ class ProcessContainer:
             print_in_color(f"_______________________________________", "yellow")
             print_in_color(f"self.iteration_i={self.iteration_i:0004}", "yellow")
 
+            test_dir_path = "/home/deepview/SSD/pathfinder/src/models/test"
+            test_inputs_dir_path  = f"/home/deepview/SSD/pathfinder/src/models/test/inputs/{self.iteration_i:04}"
+            image_input_dir_path  = f"/home/deepview/SSD/pathfinder/src/models/test/inputs/{self.iteration_i:04}/image"
+            test_outputs_dir_path = f"/home/deepview/SSD/pathfinder/src/models/test/outputs/{self.iteration_i:04}"
+
+            os.makedirs(test_dir_path, exist_ok=True)
+            os.makedirs(test_inputs_dir_path, exist_ok=True)
+            os.makedirs(image_input_dir_path, exist_ok=True)
+            os.makedirs(test_outputs_dir_path, exist_ok=True)
+
             for m in self.msg_queue:
                 #print_in_color(f"m.which()={m.which()}", "red")
                 if m.which() == "liveCalibration":
                     #print(f"m.which()={m.which}")
-                    print_in_color(f"liveCalibration", "yellow")
+                    print_in_color(f"liveCalibration", "cyan")
+                    live_calibration_dict = m.to_dict()
+
+                    live_calibration_path = os.path.join(test_dir_path, "liveCalibration.json")
+
+                    with open(live_calibration_path, 'w') as FILE:
+                        json.dump(live_calibration_dict, FILE, indent=4)
+
+                    print_in_color(f"{m.to_dict()}", "cyan")
+
 
                 if m.which() == "roadCameraState":
                     #print_in_color(f"m.which()={m.which}", "yellow")
                     print_in_color(f"roadCameraState.frameId={m.roadCameraState.frameId}", "yellow")
+                    img_nv12 = frs[m.which()].get(m.roadCameraState.frameId, pix_fmt="nv12")[0]
+                    print_in_color(f"type(img_nv12)={type(img_nv12)} img_nv12.shape={img_nv12.shape}", "yellow")
+                    img_rgb = frs[m.which()].get(m.roadCameraState.frameId, pix_fmt="rgb24")[0]
+                    print_in_color(f"type(img_rgb)={type(img_rgb)} img_rgb.shape={img_rgb.shape}", "yellow")
                     #print_in_color(f"m.to_dict()={m.to_dict()}", "yellow")
+                    nv12_img_path = os.path.join(image_input_dir_path, "img_nv12.npy")
+                    rgb_img_path  = os.path.join(image_input_dir_path, "img_rgb.npy")
+                    rgb_png_img_path = os.path.join(image_input_dir_path, "img_rgb.png")
+
+                    np.save(nv12_img_path, img_nv12)
+                    np.save(rgb_img_path, img_rgb)
+
+                    img_rgb_png = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2RGB)
+                    cv2.imwrite(rgb_png_img_path, img_rgb_png)
 
                     #print(f"frameId={m.frameId}")
                     #print(f"frameId={m.frameId}")
