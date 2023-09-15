@@ -89,7 +89,19 @@ def run_loop(m, tf8_input=False):
 
 
     ret = m.run(None, dict(zip(input_keys, inputs)))
+
+    print(f"len(ret)={len(ret)}")
+    print(f"model_output_array.shape={ret[0].shape}")
     #print(ret, file=sys.stderr)
+
+    # save model_output_array
+    test_outputs_dir_path  = f"/home/deepview/SSD/pathfinder/src/models/test/outputs/{iteration_i:04}"
+    os.makedirs(test_outputs_dir_path, exist_ok=True)
+    output_i_filename = f"model_output_array.npy"
+    output_i_filepath = os.path.join(test_outputs_dir_path, output_i_filename)
+    print(f"saving filepath={output_i_filepath}", file=sys.stderr)
+    np.save(output_i_filepath, ret[0])
+
     for r in ret:
       write(r.astype(np.float32))
 
