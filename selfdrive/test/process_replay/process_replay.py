@@ -230,7 +230,7 @@ class ProcessContainer:
   def run_step(self, msg: capnp._DynamicStructReader, frs: Optional[Dict[str, Any]]) -> List[capnp._DynamicStructReader]:
 
     #print_in_color(f"proc_name={self.cfg.proc_name}", "red")
-    DATA_DIR_PATH = "/home/deepview/SSD/pathfinder/src/can/test"
+    DATA_DIR_PATH = "/home/deepview/SSD/pathfinder/src/unit_tests/test_data/can/inputs"
     if not hasattr(self, "iteration_i"):
         self.iteration_i = 0
 

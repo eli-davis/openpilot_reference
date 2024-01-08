@@ -1,5 +1,13 @@
 # B"H
 
+# see openpilot_reference/selfdrive/test/
+# - fordtest.py
+# - process_replay.py (see diff in github openpilot_reference)
+# 
+# TODO: openpilot_reference/deepview/save_test_data.py
+# - have all calls from openpilot be to this file, to simplify testing on different versions of openpilot
+# TODO: openpilot_reference/deepview/generate_test_data.py
+# - calls to start testing -- variable paths for saving data
 # ____________________________________________________________ #
 # ____________________________________________________________ #
 
@@ -115,16 +123,13 @@ https://github.com/intel/compute-runtime/releases
 # ____________________________________________________________ #
 # ____________________________________________________________ #
 
-# controls test:
+# car_state test:
 
-# - car_state test
-# - todo: tbd
-
-#  /openpilot/selfdrive/controls/controls.py
+#  can_hex saved in openpilot/selfdrive/test/process_replay.process_replay
+#  vision_computer_can, vehicle_can, lateral_plan_received, car_state saved in openpilot/selfdrive/controls/controlsd.data_sample()
 
 # INPUTS controls
 # __init__()
-# - num_pandas
 # - experimental_long_allowed = self.params.get_bool("ExperimentalLongitudinalEnabled")
 # - self.disengage_on_accelerator = self.params.get_bool("DisengageOnAccelerator")
 # - self.is_metric = self.params.get_bool("IsMetric")
@@ -144,6 +149,28 @@ https://github.com/intel/compute-runtime/releases
 #
 # ____________________________________________________________ #
 # ____________________________________________________________ #
+#
+# CarControl/can_sends test:
+#
+# openpilot/selfdrive/controls/controlsd.state_control()
+# openpilot/selfdrive/controls/controlsd.publish_logs()
+#
+# vision_computer_can, vehicle_can, lateral_plan_received, car_state saved in openpilot/selfdrive/controls/controlsd.data_sample()
+#
+# INPUTS:
+# - CarState -- saved in controlsd.data_sample
+# - lateralPlan -- saved in controlsd.datasample
+# - CarParams
+# - liveParameters (stiffnessFactor, steerRatio, angleOffsetDeg, roll)
+# - liveLocationKalman
+# - controlsd.last_actuators, controlsd.steer_limited, controlsd.CI.CC.dbc_name (state_control - intermediate outputs: controlsd.desired_curvature, controlsd.desired_curvature_rate)
+# - (optional) longPlan
+
+# OUTPUTS:
+# - can_sends
+# - CarControl (includes CarControl.actuators -- get from controlsd.publishlogs)
+# - lac_log (lac_log.active, lac_log.saturated)
+# - controlsd.last_actuators, controlsd.steer_limited
 
 6) replay model:
 

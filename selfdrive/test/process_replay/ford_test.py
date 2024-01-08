@@ -1,10 +1,13 @@
-#!/usr/bin/env python3
+# B"H
+
+# based on /openpilot/selfdrive/test/process_replay/test_processes.py
+
 import argparse
 import concurrent.futures
 import os
 import sys
 from collections import defaultdict
-from tqdm import tqdm
+
 from typing import Any, DefaultDict, Dict
 
 from selfdrive.car.car_helpers import interface_names

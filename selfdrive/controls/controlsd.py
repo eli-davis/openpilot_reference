@@ -1,3 +1,7 @@
+# B"H
+
+from deepview import save_test_data
+
 #!/usr/bin/env python3
 import os
 import math
@@ -455,7 +459,7 @@ class Controls:
     #########################################################################
     #########################################################################
 
-    DATA_DIR_PATH = "/home/deepview/SSD/pathfinder/src/can/test"
+    INPUTS_DATA_DIR_PATH = "/home/deepview/SSD/pathfinder/src/unit_tests/test_data/can/inputs"
 
     # for each timestep 0-5999:
     # - save can values / car state
@@ -463,7 +467,7 @@ class Controls:
     # (60 second segment // 100 controlsd steps per second)
 
     dir_name = f"{iteration_i:04}"  # 4 digits, zero-padded
-    dir_path = os.path.join(DATA_DIR_PATH, dir_name)
+    dir_path = os.path.join(INPUTS_DATA_DIR_PATH, dir_name)
     os.makedirs(dir_path, exist_ok=True)
 
     # (1) can_hex.json saved in /openpilot/selfdrive/test/process_replay.process_replay.run_step()
@@ -651,7 +655,7 @@ class Controls:
     if self.active:
       self.current_alert_types.append(ET.WARNING)
 
-  def state_control(self, CS):
+  def state_control(self, CS, iteration_i):
     """Given the state, this function returns a CarControl packet"""
 
     # Update VehicleModel
@@ -765,6 +769,24 @@ class Controls:
       if not math.isfinite(attr):
         cloudlog.error(f"actuators.{p} not finite {actuators.to_dict()}")
         setattr(actuators, p, 0.0)
+
+    # ________________________________________________________________________ #
+    # ________________________________________________________________________ #
+
+    # @ prior_to_return of controlsd.state_control()
+    save_test_data.save_control_inputs(self.sm['liveParameters'],
+                                       self.sm['liveLocationKalman'],
+                                       self.CP,
+                                       self.last_actuators,
+                                       self.steer_limited,
+                                       self.CI.cp.dbc_name,
+                                       self.desired_curvature,
+                                       self.desired_curvature_rate,
+                                       iteration_i)
+
+    # ________________________________________________________________________ #
+    # ________________________________________________________________________ #
+
 
     return CC, lac_log
 
@@ -932,9 +954,21 @@ class Controls:
     # copy CarControl to pass to CarInterface on the next iteration
     self.CC = CC
 
-    # todo: output
-    #if iteration_i == 0:
-    #    print_in_color("[controlds: publish_logs] updated CC={CC}", "red")
+    # ________________________________________________________________________ #
+    # ________________________________________________________________________ #
+
+    # @ prior_to_return of controlsd.publish_logs()
+    if 'can_sends' not in locals():
+        can_sends = []
+    save_test_data.save_control_outputs(self.CC, can_sends, lac_log, self.last_actuators, self.steer_limited, iteration_i)
+
+    # ________________________________________________________________________ #
+    # ________________________________________________________________________ #
+
+
+
+
+
 
   def step(self, iteration_i):
     start_time = sec_since_boot()
@@ -957,7 +991,7 @@ class Controls:
       self.prof.checkpoint("State transition")
 
     # Compute actuators (runs PID loops and lateral MPC)
-    CC, lac_log = self.state_control(CS)
+    CC, lac_log = self.state_control(CS, iteration_i)
 
     self.prof.checkpoint("State Control")
 
