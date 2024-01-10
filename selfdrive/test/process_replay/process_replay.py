@@ -230,7 +230,7 @@ class ProcessContainer:
   def run_step(self, msg: capnp._DynamicStructReader, frs: Optional[Dict[str, Any]]) -> List[capnp._DynamicStructReader]:
 
     #print_in_color(f"proc_name={self.cfg.proc_name}", "red")
-    DATA_DIR_PATH = "/home/deepview/SSD/pathfinder/src/unit_tests/test_data/can/inputs"
+    DATA_DIR_PATH = "/home/deepview/SSD/pathfinder/src/unit_tests/test_data/can/"
     if not hasattr(self, "iteration_i"):
         self.iteration_i = 0
 
@@ -350,12 +350,52 @@ class ProcessContainer:
                     #can_json = json.dumps(can_dict, indent=4)
                     #print_in_color(f"can_json={can_json}", "yellow")
 
-                    dir_name = f"{self.iteration_i:04}"  # 4 digits, zero-padded
+                    dir_name = f"inputs/{self.iteration_i:04}"  # 4 digits, zero-padded
                     dir_path = os.path.join(DATA_DIR_PATH, dir_name)
                     os.makedirs(dir_path, exist_ok=True)
                     json_path = os.path.join(dir_path, "can_hex.json")
                     with open(json_path, "w") as FILE:
                         json.dump(can_dict, FILE, indent=4)
+
+                if m.which() == "liveCalibration":
+                    #print(f"m.which()={m.which}")
+                    #print_in_color(f"liveCalibration", "cyan")
+                    live_calibration_dict = m.to_dict()
+
+                    live_calibration_path = os.path.join(DATA_DIR_PATH, "liveCalibration.json")
+
+                    with open(live_calibration_path, 'w') as FILE:
+                        json.dump(live_calibration_dict, FILE, indent=4)
+
+                    #print_in_color(f"{m.to_dict()}", "cyan")
+
+
+                if m.which() == "roadCameraState":
+                    #print_in_color(f"m.which()={m.which()}", "yellow")
+                    #print_in_color(f"roadCameraState.frameId={m.roadCameraState.frameId}", "yellow")
+
+                    # workaround: in ford_test segment (doesnt have video) based on source_sement starts @ frameId=4807
+                    img_nv12 = frs[m.which()].get(m.roadCameraState.frameId-4807, pix_fmt="nv12")[0]
+                    img_rgb = frs[m.which()].get(m.roadCameraState.frameId-4807, pix_fmt="rgb24")[0]
+
+                    #print_in_color(f"type(img_nv12)={type(img_nv12)} img_nv12.shape={img_nv12.shape}", "yellow")
+                    #print_in_color(f"type(img_rgb)={type(img_rgb)} img_rgb.shape={img_rgb.shape}", "yellow")
+                    ####print_in_color(f"m.to_dict()={m.to_dict()}", "yellow")
+
+                    image_dir_name = f"inputs/{self.iteration_i:04}/image"  # 4 digits, zero-padded
+                    image_dir_path = os.path.join(DATA_DIR_PATH, image_dir_name)
+                    os.makedirs(image_dir_path, exist_ok=True)
+                    print(f"[process_replay.py] saving image to {image_dir_path}")
+                    nv12_img_path    = os.path.join(image_dir_path, "img_nv12.npy")
+                    rgb_img_path     = os.path.join(image_dir_path, "img_rgb.npy")
+                    rgb_png_img_path = os.path.join(image_dir_path, "img_rgb.png")
+
+                    np.save(nv12_img_path, img_nv12)
+                    np.save(rgb_img_path, img_rgb)
+
+                    img_rgb_png = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2RGB)
+                    cv2.imwrite(rgb_png_img_path, img_rgb_png)
+
 
 
         self.iteration_i += 1

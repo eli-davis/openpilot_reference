@@ -21,6 +21,8 @@ from tools.lib.filereader import FileReader
 from tools.lib.logreader import LogReader
 from tools.lib.helpers import save_log
 
+from tools.lib.framereader import FrameReader
+
 # ___________________________________________________________ #
 # ___________________________________________________________ #
 
@@ -32,7 +34,7 @@ from termcolor import cprint as print_in_color
 EXCLUDED_PROCS = {"modeld", "dmonitoringmodeld"}
 
 
-def test_process(cfg, lr, segment, ref_log_path):
+def test_process(cfg, lr, frs, segment, ref_log_path):
 
   ignore_fields = []
   ignore_msgs = []
@@ -40,7 +42,7 @@ def test_process(cfg, lr, segment, ref_log_path):
   ref_log_msgs = list(LogReader(ref_log_path))
 
   try:
-    log_msgs = replay_process(cfg, lr, disable_progress=True)
+    log_msgs = replay_process(cfg, lr, frs, disable_progress=True)
   except Exception as e:
     raise Exception("failed on segment: " + segment) from e
 
@@ -284,6 +286,16 @@ def run_test():
     lr = LogReader.from_bytes(lr_dat)
 
 
+    _TEST_ROUTE, _SEGMENT = source_segment.rsplit("--", 1)
+    print_in_color(f"TEST_ROUTE={_TEST_ROUTE} _SEGMENT={_SEGMENT}", "cyan")
+    frs = {
+      'roadCameraState': FrameReader(get_url(_TEST_ROUTE, _SEGMENT, log_type="fcamera"), readahead=True),
+      #'driverCameraState': FrameReader(get_url(_TEST_ROUTE, _SEGMENT, log_type="dcamera"), readahead=True),
+      'wideRoadCameraState': FrameReader(get_url(_TEST_ROUTE, _SEGMENT, log_type="ecamera"), readahead=True)
+    }
+    #print(len(frs['roadCameraState']))
+    #os._exit(0)
+
     # "new" commit - tested against "cur" commit
     # - a bit unclear, they're testing against cur commit which seems to be last tested logs
     #REFERENCE_COMMIT_PATH = os.path.join(PROC_REPLAY_DIR, "ref_commit")
@@ -298,7 +310,9 @@ def run_test():
     REFERENCE_DATA_PATH = os.path.join(PROC_REPLAY_DIR, "fakedata/")
     ref_log_path = os.path.join(REFERENCE_DATA_PATH, f"{segment}_{cfg.proc_name}_{cur_commit}.bz2")
 
-    res, log_msgs = test_process(cfg, lr, segment, ref_log_path)
+
+
+    res, log_msgs = test_process(cfg, lr, frs, segment, ref_log_path)
 
     keys = set()
     for m in log_msgs:
