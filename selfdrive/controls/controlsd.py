@@ -482,6 +482,7 @@ class Controls:
 
     CS = self.CI.update(self.CC, can_strs)
 
+
     #print_in_color(f"self.CI.cp.vl={self.CI.cp.vl}", "red")
     #print_in_color(f"self.CI.cp_cam.vl={self.CI.cp_cam.vl}", "red")
     #print_in_color(f"CS={CS.to_dict()}", "cyan")
@@ -509,8 +510,15 @@ class Controls:
 
     # (4) save car_state
     car_state_json_path = os.path.join(dir_path, "car_state.json")
+    CS_dict = CS.to_dict()
+
+    # workaround -- for whatever reason CS.update updates these with self. rather than ret.
+    CS_dict['buttons_stock_values'] = self.CI.CS.buttons_stock_values
+    CS_dict['acc_tja_status_stock_values'] = self.CI.CS.acc_tja_status_stock_values
+    CS_dict['lkas_status_stock_values'] = self.CI.CS.acc_tja_status_stock_values
+
     with open(car_state_json_path, "w") as FILE:
-        json.dump(CS.to_dict(), FILE, indent=4)
+        json.dump(CS_dict, FILE, indent=4)
     #car_state_json = json.dumps(CS.to_dict(), indent=4)
     #print_in_color(car_state_json, "yellow")
 
