@@ -513,9 +513,9 @@ class Controls:
     CS_dict = CS.to_dict()
 
     # workaround -- for whatever reason CS.update updates these with self. rather than ret.
-    CS_dict['buttons_stock_values'] = self.CI.CS.buttons_stock_values
+    CS_dict['buttons_stock_values']        = self.CI.CS.buttons_stock_values
     CS_dict['acc_tja_status_stock_values'] = self.CI.CS.acc_tja_status_stock_values
-    CS_dict['lkas_status_stock_values'] = self.CI.CS.acc_tja_status_stock_values
+    CS_dict['lkas_status_stock_values']    = self.CI.CS.lkas_status_stock_values
 
     with open(car_state_json_path, "w") as FILE:
         json.dump(CS_dict, FILE, indent=4)
