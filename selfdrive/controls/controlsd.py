@@ -513,6 +513,8 @@ class Controls:
     CS_dict = CS.to_dict()
 
     # workaround -- for whatever reason CS.update updates these with self. rather than ret.
+    CS_dict['vehicle_sensors_valid']       = self.CI.CS.vehicle_sensors_valid
+    CS_dict['hybrid_platform']             = self.CI.CS.hybrid_platform
     CS_dict['buttons_stock_values']        = self.CI.CS.buttons_stock_values
     CS_dict['acc_tja_status_stock_values'] = self.CI.CS.acc_tja_status_stock_values
     CS_dict['lkas_status_stock_values']    = self.CI.CS.lkas_status_stock_values
