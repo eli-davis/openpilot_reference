@@ -792,6 +792,8 @@ class Controls:
                                        self.CI.cp.dbc_name,
                                        self.desired_curvature,
                                        self.desired_curvature_rate,
+                                       # ford/carcontroller.frame
+                                       self.CI.CC.frame,
                                        iteration_i)
 
     # ________________________________________________________________________ #

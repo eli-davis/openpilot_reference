@@ -31,7 +31,7 @@ import json
     # ________________________________________________________________________ #
 '''
 #
-def save_control_inputs(liveParameters, liveLocationKalman, save_CarParams, last_actuators, steer_limited, can_controller_dbc_name, desired_curvature, desired_curvature_rate, iteration_i):
+def save_control_inputs(liveParameters, liveLocationKalman, save_CarParams, last_actuators, steer_limited, can_controller_dbc_name, desired_curvature, desired_curvature_rate, car_controller_frame, iteration_i):
 
     # _________________________________________________________________ #
     # _________________________________________________________________ #
@@ -92,6 +92,7 @@ def save_control_inputs(liveParameters, liveLocationKalman, save_CarParams, last
     control_inputs_dict['can_controller_dbc_name']      = can_controller_dbc_name.decode('utf-8') # bytes_object to str
     control_inputs_dict['float_desired_curvature']      = desired_curvature
     control_inputs_dict['float_desired_curvature_rate'] = desired_curvature_rate
+    control_inputs_dict['car_controller_frame']         = car_controller_frame
 
 
     control_inputs_json_path = os.path.join(dir_path, "control_inputs.json")
