@@ -96,12 +96,14 @@ def run_test():
 
     processes_to_log = ['carParams',
 
+                        "roadEncodeIdx", "wideRoadEncodeIdx"
+
                         #'cameraOdometry',
                         'liveParameters',
                         'liveCalibration',
                         'liveLocationKalman',
 
-                        'CarState',
+                        'carState',
                         'carControl',
 
                         'sendcan',
@@ -133,12 +135,15 @@ def run_test():
     ####
     _carParams       = [m for m in lr if m.which() == "carParams"]
 
+    _roadEncodeIdx     = [m for m in lr if m.which() == "roadEncodeIdx"]
+    _wideRoadEncodeIdx = [m for m in lr if m.which() == "wideRoadEncodeIdx"]
+
     _liveParameters  = [m for m in lr if m.which() == "liveParameters"]
     _liveCalibration = [m for m in lr if m.which() == "liveCalibration"]
     _liveLocationKalman = [m for m in lr if m.which() == "liveLocationKalman"]
 
-    _CarState   = [m for m in lr if m.which() == "CarState"]
-    _CarControl = [m for m in lr if m.which() == "CarControl"]
+    _CarState   = [m for m in lr if m.which() == "carState"]
+    _CarControl = [m for m in lr if m.which() == "carControl"]
 
     _sendcan = [m for m in lr if m.which() == "sendcan"]
     _can     = [m for m in lr if m.which() == "can"]
@@ -147,6 +152,11 @@ def run_test():
     _modelV2 = [m for m in lr if m.which() == "modelV2"]
 
     print("Length of _carParams:", len(_carParams))
+
+    print("Length of _roadEncodeIdx:", len(_roadEncodeIdx))
+    print("Length of _wideRoadEncodeIdx:", len(_wideRoadEncodeIdx))
+
+
     print("Length of _liveParameters:", len(_liveParameters))
     print("Length of _liveCalibration:", len(_liveCalibration))
     print("Length of _liveLocationKalman:", len(_liveLocationKalman))
@@ -157,10 +167,19 @@ def run_test():
     print("Length of _lateralPlan:", len(_lateralPlan))
     print("Length of _modelV2:", len(_modelV2))
 
-
-
     ####
 
+
+    pprint_dict("_roadEncodeIdx[0]",     _roadEncodeIdx[0].to_dict())
+    pprint_dict("_wideRoadEncodeIdx[0]", _wideRoadEncodeIdx[0].to_dict())
+
+    pprint_dict("_roadEncodeIdx[1]",     _roadEncodeIdx[1].to_dict(), "cyan")
+    pprint_dict("_wideRoadEncodeIdx[1]", _wideRoadEncodeIdx[1].to_dict(), "cyan")
+
+    pprint_dict("_can[0]",     _can[0].to_dict())
+    pprint_dict("_sendcan[0]", _sendcan[0].to_dict())
+
+    print_in_color(f"_modelV2[0].frameId={_modelV2[0].modelV2.frameId}", "cyan")
 
 
     #print(f"type(all_msgs[0])={type( all_msgs[0] )}")
