@@ -45,15 +45,6 @@ def get_log_data(segment):
 
 
 
-
-def run_test():
-
-    # FORD
-    source_segment = "54827bf84c38b14f|2023-01-26--21-59-07--4" # FORD.BRONCO_SPORT_MK1
-
-    # FORD
-    #### segment = "aregenDDE0F89FA1E|2023-05-10--14-59-26--0"
-
     '''
     cfg = ProcessConfig(
         proc_name="controlsd",
@@ -73,6 +64,15 @@ def run_test():
         main_pub="can",
     )
     '''
+
+def run_test():
+
+    # FORD
+    source_segment = "54827bf84c38b14f|2023-01-26--21-59-07--4" # FORD.BRONCO_SPORT_MK1
+
+    # FORD
+    #### segment = "aregenDDE0F89FA1E|2023-05-10--14-59-26--0"
+
     t0 = time.time()
 
     _, lr_dat = get_log_data(source_segment)
@@ -176,11 +176,18 @@ def run_test():
     pprint_dict("_roadEncodeIdx[1]",     _roadEncodeIdx[1].to_dict(), "cyan")
     pprint_dict("_wideRoadEncodeIdx[1]", _wideRoadEncodeIdx[1].to_dict(), "cyan")
 
-    pprint_dict("_can[0]",     _can[0].to_dict())
-    pprint_dict("_sendcan[0]", _sendcan[0].to_dict())
+    pprint_dict("_roadEncodeIdx[-1]",     _roadEncodeIdx[-1].to_dict(), "green")
+    pprint_dict("_wideRoadEncodeIdx[-1]", _wideRoadEncodeIdx[-1].to_dict(), "green")
 
-    print_in_color(f"_modelV2[0].frameId={_modelV2[0].modelV2.frameId}", "cyan")
+    #pprint_dict("_can[0]",     _can[0].to_dict())
+    #pprint_dict("_sendcan[0]", _sendcan[0].to_dict())
 
+    '''
+    for ii in range(0, 1200):
+        print_in_color(f"_roadEncodeIdx[{ii}].frameId={_roadEncodeIdx[ii].roadEncodeIdx.frameId}", "yellow")
+        print_in_color(f"_wideRoadEncodeIdx[{ii}].frameId={_wideRoadEncodeIdx[ii].wideRoadEncodeIdx.frameId}", "yellow")
+        print_in_color(f"_modelV2[{ii}].frameId={_modelV2[ii].modelV2.frameId}", "cyan")
+    '''
 
     #print(f"type(all_msgs[0])={type( all_msgs[0] )}")
 
@@ -191,7 +198,7 @@ def run_test():
     print_delta_t(t0, "get logs")
     #print(lr)
 
-    os._exit(0)
+    # os._exit(0)
 
     _TEST_ROUTE, _SEGMENT = source_segment.rsplit("--", 1)
     print_in_color(f"TEST_ROUTE={_TEST_ROUTE} _SEGMENT={_SEGMENT}", "cyan")
@@ -201,6 +208,12 @@ def run_test():
       'wideRoadCameraState': FrameReader(get_url(_TEST_ROUTE, _SEGMENT, log_type="ecamera"), readahead=True)
     }
 
+    ii = 0
+    main_img =     frs['roadCameraState'].get(ii, pix_fmt="nv12")[0]
+    wide_img = frs['wideRoadCameraState'].get(ii, pix_fmt="nv12")[0]
+
+    print(f"main_img={main_img} type={type(main_img)}")
+    print(f"wide_img={wide_img} type={type(wide_img)}")
 
 
 
