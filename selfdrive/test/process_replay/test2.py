@@ -1,5 +1,8 @@
 # B"H
 
+# this file is deprecated
+# see pathfinder/software/validation/integration_tests/download_openpilot_route.py
+
 import os
 import time
 
