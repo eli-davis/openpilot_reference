@@ -1,3 +1,5 @@
+# B"H
+
 import os
 import subprocess
 import sys
@@ -282,8 +284,8 @@ else:
     qt_env.PrependENVPath('PATH', Dir("#third_party/qt5/larch64/bin/").abspath)
   elif arch != "Darwin":
     qt_libs += ["GL"]
-qt_env['QT3DIR'] = qt_env['QTDIR']
-qt_env.Tool('qt3')
+#qt_env['QT3DIR'] = qt_env['QTDIR']
+#qt_env.Tool('qt3')
 
 qt_env['CPPPATH'] += qt_dirs + ["#third_party/qrcode"]
 qt_flags = [
