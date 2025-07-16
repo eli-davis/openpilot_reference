@@ -200,7 +200,6 @@ env = Environment(
   LIBPATH=libpath + [
     "#msgq_repo",
     "#third_party",
-    "#selfdrive/pandad",
     "#common",
     "#rednose/helpers",
   ],
@@ -337,7 +336,7 @@ Export('messaging')
 
 
 # Build other submodules
-SConscript(['panda/SConscript'])
+# SConscript(['panda/SConscript'])
 
 # Build rednose library
 SConscript(['rednose/SConscript'])

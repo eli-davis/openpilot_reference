@@ -5,10 +5,12 @@ import numpy as np
 from cereal import log
 from opendbc.car.interfaces import ACCEL_MIN, ACCEL_MAX
 from openpilot.common.realtime import DT_MDL
-from openpilot.common.swaglog import cloudlog
+#from openpilot.common.swaglog import cloudlog
 # WARNING: imports outside of constants will not trigger a rebuild
 from openpilot.selfdrive.modeld.constants import index_function
-from openpilot.selfdrive.controls.radard import _LEAD_ACCEL_TAU
+#from openpilot.selfdrive.controls.radard import _LEAD_ACCEL_TAU
+# Default lead acceleration decay set to 50% at 1s
+_LEAD_ACCEL_TAU = 1.5
 
 if __name__ == '__main__':  # generating code
   from openpilot.third_party.acados.acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver
@@ -444,7 +446,7 @@ class LongitudinalMpc:
     if self.solution_status != 0:
       if t > self.last_cloudlog_t + 5.0:
         self.last_cloudlog_t = t
-        cloudlog.warning(f"Long mpc reset, solution_status: {self.solution_status}")
+        print_in_color(f"Long mpc reset, solution_status: {self.solution_status}", "red")
       self.reset()
       # reset = 1
     # print(f"long_mpc timings: total internal {self.solve_time:.2e}, external: {(time.monotonic() - t0):.2e} qp {self.time_qp_solution:.2e}, \
