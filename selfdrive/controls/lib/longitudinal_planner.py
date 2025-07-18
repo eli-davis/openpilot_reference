@@ -49,6 +49,12 @@ def limit_accel_in_turns(v_ego, angle_steers, a_target, CP):
 
   return [a_target[0], min(a_target[1], a_x_allowed)]
 
+class dict_object(dict):
+    def __getattr__(self, key):
+        return self[key]
+
+    def __setattr__(self, key, value):
+        self[key] = value
 
 class LongitudinalPlanner:
   def __init__(self, CP, init_v=0.0, init_a=0.0, dt=DT_MDL):
@@ -85,32 +91,76 @@ class LongitudinalPlanner:
       v = np.zeros(len(T_IDXS_MPC))
       a = np.zeros(len(T_IDXS_MPC))
       j = np.zeros(len(T_IDXS_MPC))
+
+    # _________________________________________________________________ #
+    # _________________________________________________________________ #
+    '''
     if len(model_msg.meta.disengagePredictions.gasPressProbs) > 1:
       throttle_prob = model_msg.meta.disengagePredictions.gasPressProbs[1]
     else:
       throttle_prob = 1.0
+    '''
+    throttle_prob = 1.0
+
+    # _________________________________________________________________ #
+    # _________________________________________________________________ #
+
     return x, v, a, j, throttle_prob
 
   def update(self, sm):
-    self.mpc.mode = 'blended' if sm['selfdriveState'].experimentalMode else 'acc'
 
+    # _________________________________________________________________ #
+    # _________________________________________________________________ #
+
+    '''
+    self.mpc.mode = 'blended' if sm['selfdriveState'].experimentalMode else 'acc'
+    '''
+    self.mpc.mode = 'blended'
+
+    # _________________________________________________________________ #
+    # _________________________________________________________________ #
+
+    '''
     if len(sm['carControl'].orientationNED) == 3:
       accel_coast = get_coast_accel(sm['carControl'].orientationNED[1])
     else:
       accel_coast = ACCEL_MAX
+    '''
+    accel_coast = ACCEL_MAX
+
+    # _________________________________________________________________ #
+    # _________________________________________________________________ #
+
+    # todo
 
     v_ego = sm['carState'].vEgo
     v_cruise_kph = min(sm['carState'].vCruise, V_CRUISE_MAX)
     v_cruise = v_cruise_kph * CV.KPH_TO_MS
     v_cruise_initialized = sm['carState'].vCruise != V_CRUISE_UNSET
 
-    long_control_off = sm['controlsState'].longControlState == LongCtrlState.off
     force_slow_decel = sm['controlsState'].forceDecel
 
-    # Reset current state when not engaged, or user is controlling the speed
-    reset_state = long_control_off if self.CP.openpilotLongitudinalControl else not sm['selfdriveState'].enabled
-    # PCM cruise speed may be updated a few cycles later, check if initialized
-    reset_state = reset_state or not v_cruise_initialized
+    # _________________________________________________________________ #
+    # _________________________________________________________________ #
+
+    '''
+    # Determine if the planner should reset its state
+
+    # Case 1: If OpenPilot is responsible for longitudinal control, reset if it's currently off
+    if self.CP.openpilotLongitudinalControl:
+        reset_state = (sm['controlsState'].longControlState == LongCtrlState.off)
+    # Case 2: Otherwise (stock ACC is in control), reset if OpenPilot is not engaged
+    else:
+        reset_state = not sm['selfdriveState'].enabled
+
+    # Case 3: Always reset if cruise speed hasn't been initialized yet
+    if not v_cruise_initialized:
+        reset_state = True
+    '''
+    reset_state = False
+
+    # _________________________________________________________________ #
+    # _________________________________________________________________ #
 
     # No change cost when user is controlling the speed, or when standstill
     prev_accel_constraint = not (reset_state or sm['carState'].standstill)
@@ -143,9 +193,27 @@ class LongitudinalPlanner:
     if force_slow_decel:
       v_cruise = 0.0
 
+    # _________________________________________________________________ #
+    # _________________________________________________________________ #
+    '''
     self.mpc.set_weights(prev_accel_constraint, personality=sm['selfdriveState'].personality)
+    '''
+    self.mpc.set_weights(prev_accel_constraint)
+    # _________________________________________________________________ #
+    # _________________________________________________________________ #
+
     self.mpc.set_cur_state(self.v_desired_filter.x, self.a_desired)
+
+    # _________________________________________________________________ #
+    # _________________________________________________________________ #
+
+    '''
     self.mpc.update(sm['radarState'], v_cruise, x, v, a, j, personality=sm['selfdriveState'].personality)
+    '''
+    self.mpc.update(sm['radarState'], v_cruise, x, v, a, j)
+
+    # _________________________________________________________________ #
+    # _________________________________________________________________ #
 
     self.v_desired_trajectory = np.interp(CONTROL_N_T_IDX, T_IDXS_MPC, self.mpc.v_solution)
     self.a_desired_trajectory = np.interp(CONTROL_N_T_IDX, T_IDXS_MPC, self.mpc.a_solution)
@@ -161,6 +229,7 @@ class LongitudinalPlanner:
     self.a_desired = float(np.interp(self.dt, CONTROL_N_T_IDX, self.a_desired_trajectory))
     self.v_desired_filter.x = self.v_desired_filter.x + self.dt * (self.a_desired + a_prev) / 2.0
 
+    # DT_MDL = 0.05
     action_t =  self.CP.longitudinalActuatorDelay + DT_MDL
     output_a_target, self.output_should_stop = get_accel_from_plan(self.v_desired_trajectory, self.a_desired_trajectory, CONTROL_N_T_IDX,
                                                                         action_t=action_t, vEgoStopping=self.CP.vEgoStopping)
@@ -170,14 +239,29 @@ class LongitudinalPlanner:
     self.output_a_target = np.clip(output_a_target, accel_clip[0], accel_clip[1])
     self.prev_accel_clip = accel_clip
 
-  def publish(self, sm, pm):
+    # _________________________________________________________________ #
+    # _________________________________________________________________ #
+
+    '''
+    ##def publish(self, sm, pm):
     plan_send = messaging.new_message('longitudinalPlan')
 
-    plan_send.valid = sm.all_checks(service_list=['carState', 'controlsState', 'selfdriveState'])
+    # plan_send.valid = sm.all_checks(service_list=['carState', 'controlsState', 'selfdriveState'])
 
     longitudinalPlan = plan_send.longitudinalPlan
+    '''
+
+    # _________________________________________________________________ #
+    # _________________________________________________________________ #
+    longitudinalPlan = dict_object()
+
+    '''
     longitudinalPlan.modelMonoTime = sm.logMonoTime['modelV2']
     longitudinalPlan.processingDelay = (plan_send.logMonoTime / 1e9) - sm.logMonoTime['modelV2']
+    '''
+    longitudinalPlan.modelMonoTime   = sm['modelV2']['logMonoTime']
+    longitudinalPlan.processingDelay = 0.05
+
     longitudinalPlan.solverExecutionTime = self.mpc.solve_time
 
     longitudinalPlan.speeds = self.v_desired_trajectory.tolist()
@@ -193,4 +277,13 @@ class LongitudinalPlanner:
     longitudinalPlan.allowBrake = True
     longitudinalPlan.allowThrottle = bool(self.allow_throttle)
 
-    pm.send('longitudinalPlan', plan_send)
+    # _________________________________________________________________ #
+    # _________________________________________________________________ #
+    '''
+    #pm.send('longitudinalPlan', plan_send)
+    return plan_send
+    '''
+    return longitudinalPlan
+
+    # _________________________________________________________________ #
+    # _________________________________________________________________ #
