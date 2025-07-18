@@ -1,3 +1,5 @@
+# B"H
+
 #!/usr/bin/env python3
 import math
 from typing import SupportsFloat
@@ -9,7 +11,9 @@ from openpilot.common.params import Params
 from openpilot.common.realtime import config_realtime_process, Priority, Ratekeeper
 from openpilot.common.swaglog import cloudlog
 
+'''
 from opendbc.car.car_helpers import interfaces
+'''
 from opendbc.car.vehicle_model import VehicleModel
 from openpilot.selfdrive.controls.lib.drive_helpers import clip_curvature
 from openpilot.selfdrive.controls.lib.latcontrol import LatControl
@@ -27,34 +31,72 @@ ACTUATOR_FIELDS = tuple(car.CarControl.Actuators.schema.fields.keys())
 
 
 class Controls:
-  def __init__(self) -> None:
+  def __init__(self, CP, CI, inputs):
+
+    # ______________________________________________________ #
+    # ______________________________________________________ #
+
+    '''
     self.params = Params()
     cloudlog.info("controlsd is waiting for CarParams")
     self.CP = messaging.log_from_bytes(self.params.get("CarParams", block=True), car.CarParams)
     cloudlog.info("controlsd got CarParams")
+    '''
 
+    self.CP = CP
+
+    # ______________________________________________________ #
+    # ______________________________________________________ #
+
+    '''
     self.CI = interfaces[self.CP.carFingerprint](self.CP)
+    '''
+    self.CI = CI
+    # ______________________________________________________ #
+    # ______________________________________________________ #
 
+    '''
     self.sm = messaging.SubMaster(['liveParameters', 'liveTorqueParameters', 'modelV2', 'selfdriveState',
                                    'liveCalibration', 'livePose', 'longitudinalPlan', 'carState', 'carOutput',
                                    'driverMonitoringState', 'onroadEvents', 'driverAssistance'], poll='selfdriveState')
     self.pm = messaging.PubMaster(['carControl', 'controlsState'])
+    '''
+
+    self.sm = inputs
+
+    # ______________________________________________________ #
+    # ______________________________________________________ #
 
     self.steer_limited_by_controls = False
     self.curvature = 0.0
     self.desired_curvature = 0.0
 
     self.pose_calibrator = PoseCalibrator()
+    '''
     self.calibrated_pose: Pose | None = None
+    '''
+    self.calibrated_pose = None
 
     self.LoC = LongControl(self.CP)
     self.VM = VehicleModel(self.CP)
     self.LaC: LatControl
+
+    # ______________________________________________________ #
+    # ______________________________________________________ #
+
+    '''
     if self.CP.steerControlType == car.CarParams.SteerControlType.angle:
       self.LaC = LatControlAngle(self.CP, self.CI)
     elif self.CP.lateralTuning.which() == 'pid':
       self.LaC = LatControlPID(self.CP, self.CI)
     elif self.CP.lateralTuning.which() == 'torque':
+      self.LaC = LatControlTorque(self.CP, self.CI)
+    '''
+    if self.CP.steerControlType == car.CarParams.SteerControlType.angle:
+      self.LaC = LatControlAngle(self.CP, self.CI)
+    elif self.CP.lateralTuning == 'pid':
+      self.LaC = LatControlPID(self.CP, self.CI)
+    elif self.CP.lateralTuning == 'torque':
       self.LaC = LatControlTorque(self.CP, self.CI)
 
   def update(self):
