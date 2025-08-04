@@ -1,3 +1,5 @@
+# B"H
+
 #!/usr/bin/env python3
 from cereal import car
 from openpilot.common.params import Params

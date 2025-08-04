@@ -259,7 +259,7 @@ class LongitudinalPlanner:
     longitudinalPlan.modelMonoTime = sm.logMonoTime['modelV2']
     longitudinalPlan.processingDelay = (plan_send.logMonoTime / 1e9) - sm.logMonoTime['modelV2']
     '''
-    longitudinalPlan.modelMonoTime   = sm['modelV2']['logMonoTime']
+    #longitudinalPlan.modelMonoTime   = sm['modelV2']['logMonoTime']
     longitudinalPlan.processingDelay = 0.05
 
     longitudinalPlan.solverExecutionTime = self.mpc.solve_time
